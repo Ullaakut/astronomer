@@ -90,7 +90,7 @@ func fetchURL(c *Context, url string, value interface{}, refresh bool) (string, 
 		return "", nil
 	}
 
-	// Loop until a next URL is found or a direct result was recieved.
+	// Loop until a next URL is found or a direct result was received.
 	// The last page is always checked in case it changed since the last scan.
 	for {
 		// If not found, fetch the URL from the GitHub API server.
