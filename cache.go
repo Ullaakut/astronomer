@@ -18,7 +18,7 @@ import (
 // supplied request's URL. If found, the file contains a cached copy
 // of the HTTP response. The contents are read into an http.Response
 // object and returned.
-func getCache(ctx *Context, req *http.Request) (*http.Response, error) {
+func getCache(ctx context, req *http.Request) (*http.Response, error) {
 	filename := cacheEntryFilename(ctx, req.URL.String())
 	pathToCreate := path.Dir(filename)
 
@@ -47,7 +47,7 @@ func readCachedResponse(filename string, req *http.Request) (*http.Response, err
 }
 
 // putCache puts the supplied http.Response into the cache.
-func putCache(ctx *Context, req *http.Request, resp *http.Response) error {
+func putCache(ctx context, req *http.Request, resp *http.Response) error {
 	defer resp.Body.Close()
 
 	filename := cacheEntryFilename(ctx, req.URL.String())
@@ -74,20 +74,20 @@ func putCache(ctx *Context, req *http.Request, resp *http.Response) error {
 
 // cacheEntryFilename creates a filename-safe name in a subdirectory
 // of the configured cache dir, with any access token stripped out.
-func cacheEntryFilename(ctx *Context, url string) string {
-	newURL := strings.Replace(url, fmt.Sprintf("access_token=%s", ctx.Token), "", 1)
-	return filepath.Join(ctx.CacheDir, ctx.Repo, sanitize.BaseName(newURL))
+func cacheEntryFilename(ctx context, url string) string {
+	newURL := strings.Replace(url, fmt.Sprintf("access_token=%s", ctx.githubToken), "", 1)
+	return filepath.Join(ctx.cacheDirectoryPath, ctx.repoOwner, ctx.repoName, sanitize.BaseName(newURL))
 }
 
 // clearEntry clears a specified cache entry.
-func clearEntry(ctx *Context, url string) error {
+func clearEntry(ctx context, url string) error {
 	filename := cacheEntryFilename(ctx, url)
 	return os.Remove(filename)
 }
 
 // Clear clears all cache entries for the repository specified in the
 // fetch context.
-func Clear(ctx *Context) error {
-	filename := filepath.Join(ctx.CacheDir, ctx.Repo)
+func Clear(ctx context) error {
+	filename := filepath.Join(ctx.cacheDirectoryPath, ctx.repoOwner, ctx.repoName)
 	return os.RemoveAll(filename)
 }

@@ -26,36 +26,44 @@ func main() {
 func detectFakeStars(repository string) error {
 	disgo.SetTerminalOptions(disgo.WithColors(true), disgo.WithDebug(true))
 
-	ctx := &Context{
-		Repo:     strings.ToLower(repository),
-		Token:    os.Getenv("GITHUB_TOKEN"),
-		CacheDir: "./data",
+	repoInfo := strings.Split(repository, "/")
+	if len(repoInfo) != 2 {
+		return fmt.Errorf("invalid repository %q: should be of the form \"repoOwner/repoName\"", repository)
 	}
 
+	ctx := context{
+		repoOwner:          repoInfo[0],
+		repoName:           repoInfo[1],
+		githubToken:        os.Getenv("GITHUB_TOKEN"),
+		cacheDirectoryPath: "./data",
+	}
+
+	// users, err := loadState(ctx)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to load saved stargazer data: %s", err)
+	// }
+
+	// if users == nil {
 	disgo.Infof("Beginning fetching process for repository %q\n", repository)
-	if err := getAllUsers(ctx); err != nil {
+	users, err := fetchStargazers(ctx)
+	if err != nil {
 		return fmt.Errorf("failed to query stargazer data: %s", err)
 	}
+	// }
 
-	disgo.Infof("Loading state")
-	stargazers, err := loadState(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to load saved stargazer data: %s", err)
-	}
-
-	if len(stargazers) < 300 {
+	if len(users) < 300 {
 		disgo.Infoln(style.Important("This repository appears to have a low amount of stargazers. Trust calculations might not be accurate."))
 	}
 
-	disgo.Infof("Computing trust factors")
-	report, err := computeTrustReport(stargazers)
+	report, err := computeTrustReport(users)
 	if err != nil {
-		return fmt.Errorf("failed to analyze stargazer data: %s", err)
+		disgo.Infof("%+v\n", report)
+		return fmt.Errorf("failed to analyze stargazer data: %v", err)
 	}
 
 	renderReport(report)
 
-	disgo.Infof("%s Analysis successful. %d users computed.\n", style.Success(style.SymbolCheck), len(stargazers))
+	disgo.Infof("%s Analysis successful. %d users computed.\n", style.Success(style.SymbolCheck), len(users))
 
 	return nil
 }

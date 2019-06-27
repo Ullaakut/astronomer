@@ -20,11 +20,15 @@ The goal of this tool is to **detect illegitimate GitHub stars from bot accounts
 
 ## Trust algorithm
 
-Trust is computed based on four different factors:
+Trust is computed based on many different factors:
 
-* The average amount of account lifetime contributions among stargazers
+* The average amount of lifetime contributions among stargazers
+* The average amount of private contributions
+* The average amount of public created issues
+* The average amount of public authored commits
+* The average amount of public opened pull requests
+* The average amount of public code reviews
 * The average weighted contribution score (weighted by making older contributions more trustworthy)
-* The 65th, 85th and 95th percentile of the weighted contribution score: can be useful to detect a mix of real and fake users that would amount to a normal average
 * The average account age, older is more trustworthy
 
 ### Upcoming improvements
@@ -67,7 +71,7 @@ Repositories with high amounts of stars, especially when they arrive in bursts, 
 
 > _Why is `Astronomer` so slow? It's been scanning a project for hours._
 
-Astronomer needs to make a lot of queries to the GitHub API in order to fetch all of the user data. It typically needs to do one request per page of stargazers (that's one query per 30 users), and then two requests per user (one to get their user profile and one for their GitHub contributions). This means that for a repository with 25000 stars, Astronomer would need to make 830 requests to list all users and then 50000 requests to get all user data. The other issue is that the GitHub API is rate limited to 5000 requests per hour, so this particular scan would end up taking at least 10 hours. I plan on contacting GitHub to try to get a token with more flexible rate limiting, since I believe this project is beneficial to their business, but I'm not confident this request will be accepted.
+Astronomer needs to make a lot of queries to the GitHub API in order to fetch all of the user data. It typically needs to do one request per page of stargazers per year of contributions, (as of 2019 that's 11 requests per 30 users). The issue is that the GitHub API is rate limited to 5000 requests per hour, so for a scan of 25000 stars for example, about 9000 requests are required, which will result in at least a two hour scan. I plan on contacting GitHub to try to get a token with more flexible rate limiting, since I believe this project is beneficial to their business, but I'm not confident this request will be accepted.
 
 > _How can I contribute to this project?_
 
