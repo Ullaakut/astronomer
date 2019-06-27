@@ -7,11 +7,11 @@
     <a href="#license">
         <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat" />
     </a>
-    <a href="https://goreportcard.com/report/github.com/Ullaakut/astronomer">
-        <img src="https://goreportcard.com/badge/github.com/Ullaakut/astronomer" />
+    <a href="https://goreportcard.com/report/github.com/ullaakut/astronomer">
+        <img src="https://goreportcard.com/badge/github.com/ullaakut/astronomer" />
     </a>
-    <a href="https://github.com/Ullaakut/astronomer/releases/latest">
-        <img src="https://img.shields.io/github/release/Ullaakut/astronomer.svg?style=flat" />
+    <a href="https://github.com/ullaakut/astronomer/releases/latest">
+        <img src="https://img.shields.io/github/release/ullaakut/astronomer.svg?style=flat" />
     </a>
 </p>
 
