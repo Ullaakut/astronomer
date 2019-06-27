@@ -10,27 +10,17 @@ import (
 	"github.com/ullaakut/disgo"
 )
 
+// "Good" average values represent what a legitimate repository should have on average.
+// To reach a 99% trust level, a repository's users but have averages equivalent to at
+// least 1.5 times what is considered good.
 const (
-	badAverageTotalContributions  = 800
-	goodAverageTotalContributions = 1600
-
-	badAverageTrustScore  = 5000
-	goodAverageTrustScore = 10000
-
-	badSixtyFifthPercentileTrustScore  = 1500
-	goodSixtyFifthPercentileTrustScore = 2000
-
-	badEightyFifthPercentileTrustScore  = 10000
+	goodAverageTotalContributions       = 1600
+	goodAverageTrustScore               = 10000
+	goodSixtyFifthPercentileTrustScore  = 2000
 	goodEightyFifthPercentileTrustScore = 15000
-
-	badNinetyFifthPercentileTrustScore  = 22000
 	goodNinetyFifthPercentileTrustScore = 26000
-
-	badAverageAccountAge  = 1200
-	goodAverageAccountAge = 1800
-
-	badTrustPercent  = 0.25
-	goodTrustPercent = 0.75
+	goodAverageAccountAge               = 1800
+	goodTrustPercent                    = 0.75
 )
 
 type trustFactor struct {
