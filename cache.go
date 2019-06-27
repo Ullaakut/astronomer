@@ -20,8 +20,10 @@ import (
 // object and returned.
 func getCache(c *Context, req *http.Request) (*http.Response, error) {
 	filename := cacheEntryFilename(c, req.URL.String())
-	if err := os.MkdirAll(path.Dir(filename), os.ModeDir|0755); err != nil {
-		return nil, err
+	pathToCreate := path.Dir(filename)
+
+	if err := os.MkdirAll(pathToCreate, os.ModeDir|0755); err != nil {
+		return nil, fmt.Errorf("unable to create path %q: %v", pathToCreate, err)
 	}
 
 	resp, err := readCachedResponse(filename, req)
@@ -29,36 +31,41 @@ func getCache(c *Context, req *http.Request) (*http.Response, error) {
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("unable to read cached response: %v", err)
 	}
 
-	return resp, err
+	return resp, nil
 }
 
 func readCachedResponse(filename string, req *http.Request) (*http.Response, error) {
 	body, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read cached response from file %q: %v", filename, err)
 	}
+
 	return http.ReadResponse(bufio.NewReader(bytes.NewBuffer(body)), req)
 }
 
 // putCache puts the supplied http.Response into the cache.
 func putCache(c *Context, req *http.Request, resp *http.Response) error {
 	defer resp.Body.Close()
+
 	filename := cacheEntryFilename(c, req.URL.String())
 	f, err := os.Create(filename)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to create cache file: %v", err)
 	}
+
 	if err := resp.Write(f); err != nil {
 		f.Close()
-		return err
+		return fmt.Errorf("unable to write in cache: %v", err)
 	}
+
 	f.Close()
 
-	if readResp, err := readCachedResponse(filename, req); err != nil {
-		return err
+	readResp, err := readCachedResponse(filename, req)
+	if err != nil {
+		return fmt.Errorf("unable to read cached response: %v", err)
 	}
 
 	resp.Body = readResp.Body
