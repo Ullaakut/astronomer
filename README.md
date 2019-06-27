@@ -20,7 +20,7 @@ The goal of this tool is to **detect illegitimate GitHub stars from bot accounts
 
 ## Trust algorithm
 
-Trust is computed based on five different factors:
+Trust is computed based on four different factors:
 
 * The average amount of account lifetime contributions among stargazers
 * The average weighted contribution score (weighted by making older contributions more trustworthy)
