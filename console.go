@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	// Category                             Score           Trust
+	// Averages                             Score           Trust
 	// --------                             -----           -----
 	headerFormat = "\n%s<TAB>%s<TAB>%s\n%s<TAB>%s<TAB>%s\n"
 
@@ -19,7 +19,7 @@ const (
 	// > Overall trust:                                      76%
 	overallTrustFormat = "%s\n%s:<TAB>%s\n"
 
-	// Length of the `Category` column.
+	// Length of the `Averages` column.
 	firstColumnLength = 35
 
 	// Length of the `Score` column.
@@ -27,7 +27,7 @@ const (
 )
 
 // renderReport prints a
-func renderReport(report *trustReport) {
+func renderReport(report trustReport) {
 	if report == nil {
 		disgo.Errorln(style.Failure(style.SymbolCross, " No report to render."))
 		return
@@ -35,29 +35,17 @@ func renderReport(report *trustReport) {
 
 	printHeader()
 
-	printTrustFactor("Average total contributions", report.contributions)
-	printTrustFactor("Average score", report.trustScore)
-
-	if report.trustSFPercentile != nil {
-		printTrustFactor("65th percentile", *report.trustSFPercentile)
+	for _, factorName := range factors {
+		printTrustFactor(string(factorName), report[factorName])
 	}
 
-	if report.trustEFPercentile != nil {
-		printTrustFactor("85th percentile", *report.trustEFPercentile)
-	}
-
-	if report.trustNFPercentile != nil {
-		printTrustFactor("95th percentile", *report.trustNFPercentile)
-	}
-
-	printTrustFactor("Average account age (days)", report.accountAge)
-	printResult("Overall trust", report.overallTrust)
+	printResult("Overall trust", report[overallTrust])
 }
 
 // printHeader prints the header containing each category name and underlines them.
 func printHeader() {
 	headerNames := []string{
-		"Category",
+		"Averages",
 		"Score",
 		"Trust",
 	}
@@ -87,9 +75,9 @@ func printTrustFactor(trustFactorName string, trustFactor trustFactor) {
 	format := tabulateFormat(trustFactorsFormat, trustFactorName, firstColumnLength)
 	format = tabulateFormat(format, fmt.Sprintf("%1.f", trustFactor.value), secondColumnLength)
 
-	if trustFactor.trustPercent < badTrustPercent {
+	if trustFactor.trustPercent < 0.25 {
 		disgo.Infof(format, trustFactorName, style.Failure(fmt.Sprintf("%1.f", trustFactor.value)), style.Failure(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
-	} else if trustFactor.trustPercent < goodTrustPercent {
+	} else if trustFactor.trustPercent < 0.75 {
 		disgo.Infof(format, trustFactorName, style.Important(fmt.Sprintf("%1.f", trustFactor.value)), style.Important(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	} else {
 		disgo.Infof(format, trustFactorName, style.Success(fmt.Sprintf("%1.f", trustFactor.value)), style.Success(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
@@ -102,9 +90,9 @@ func printResult(trustFactorName string, trustFactor trustFactor) {
 	format := tabulateFormat(overallTrustFormat, trustFactorName, firstColumnLength+secondColumnLength+1)
 	underline := generateUnderline(firstColumnLength + secondColumnLength + 8)
 
-	if trustFactor.trustPercent < badTrustPercent {
+	if trustFactor.trustPercent < 0.25 {
 		disgo.Infof(format, underline, trustFactorName, style.Failure(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
-	} else if trustFactor.trustPercent < goodTrustPercent {
+	} else if trustFactor.trustPercent < 0.75 {
 		disgo.Infof(format, underline, trustFactorName, style.Important(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	} else {
 		disgo.Infof(format, underline, trustFactorName, style.Success(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))

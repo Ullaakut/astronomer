@@ -10,8 +10,6 @@ import (
 	"github.com/ullaakut/disgo"
 )
 
-const year = 24 * time.Hour * 365
-
 var (
 	twoYearsAgo = time.Now().Add(-2 * year).Format(time.RFC3339)
 
