@@ -71,7 +71,7 @@ Astronomer needs to make a lot of queries to the GitHub API in order to fetch al
 
 > _How can I contribute to this project?_
 
-If you have a strong math background, knowledge in statistics and analytics, or in general believe you could make the trust algorithm smarter, please contact me. I've always been terrible at these kinds of things so the current version is a lame attempt which begs for improvement.
+If you have a strong math background, knowledge in statistics and analytics, or in general believe you could make the trust algorithm smarter, please contact me, or at least feel free to open a feature request describing what algorithm you think would work better.
 
 If you are a software engineer or a web developer (or both), you could also participate in helping to build the next version of Astronomer: an API and a web application to let people scan whatever repositories they want for fake stars, and see previously generated reports through a web interface. It would make it easy for everyone to check whether or not a repository's stargazers are legit.
 
