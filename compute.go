@@ -20,7 +20,9 @@ const (
 	goodEightyFifthPercentileTrustScore = 15000
 	goodNinetyFifthPercentileTrustScore = 26000
 	goodAverageAccountAge               = 1800
-	goodTrustPercent                    = 0.75
+
+	badTrustPercent  = 0.25
+	goodTrustPercent = 0.75
 )
 
 type trustFactor struct {
