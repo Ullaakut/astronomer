@@ -37,7 +37,7 @@ I am planning on soon also computing every 5th percentile (`5`, `10`, `15` and s
     <img width="65%" src="img/cameradar.png">
 </p>
 <p align="right">
-    <img width="65%" src="img/chinese_repo.png">
+    <img width="65%" src="img/suspicious_repo.png">
 </p>
 <p align="left">
     <img width="65%" src="img/flaeg.png">
