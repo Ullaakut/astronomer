@@ -57,10 +57,15 @@ func fetchStargazers(ctx context) ([]user, error) {
 	// Iterate on lists of users.
 	var page int
 	for {
-		disgo.StartStepf("Fetching stargazers %d to %d", page*usersPerRequest, (page+1)*usersPerRequest)
 		page++
 		// Inject variables into request body.
 		paginatedRequestBody := strings.Replace(requestBody, "$pagination", fmt.Sprint(usersPerRequest), 1)
+
+		// // HACK: Hardcoded skip because of user https://github.com/jstrachan
+		// // which has a broken profile that breaks the API 100% of the time.
+		// if page == 116 {
+		// 	cursor = "Y3Vyc29yOnYyOpIAzgOLi4k="
+		// }
 
 		// If this isn't the first request, inject the cursor value.
 		if cursor != "" {
@@ -80,6 +85,8 @@ func fetchStargazers(ctx context) ([]user, error) {
 			yearlyRequestBody := strings.Replace(paginatedRequestBody, "$dateFrom", from.Format(iso8601Format), 1)
 			yearlyRequestBody = strings.Replace(yearlyRequestBody, "$dateTo", to.Format(iso8601Format), 1)
 
+			// fmt.Println(string(yearlyRequestBody))
+
 			req, err := http.NewRequest("POST", "https://api.github.com/graphql", bytes.NewBuffer([]byte(yearlyRequestBody)))
 			if err != nil {
 				return nil, disgo.FailStepf("unable to prepare request: %v", err)
@@ -98,6 +105,8 @@ func fetchStargazers(ctx context) ([]user, error) {
 			// If the request was not found in the cache, try to fetch it until it works
 			// or until the limit of 20 attempts is reached.
 			if resp == nil {
+				disgo.StartStepf("Fetching stargazers %d to %d", page*usersPerRequest, (page+1)*usersPerRequest)
+
 				var attempts int
 				backoff.Retry(func() error {
 					// If we reached 20 attempts, give up.
@@ -204,12 +213,12 @@ func parseResponse(resp *http.Response) (*listStargazersResponse, []byte, error)
 	if err != nil {
 		disgo.Errorf("Response: %s\n", responseBody)
 		resp.Body.Close()
-		return nil, nil, fmt.Errorf("unable to unmarshal stargazers: %v", err)
+		return nil, responseBody, fmt.Errorf("unable to unmarshal stargazers: %v", err)
 	}
 
 	if len(response.Errors) != 0 {
 		resp.Body.Close()
-		return nil, nil, fmt.Errorf("error while querying user data: %v [%s:%s]", response.Errors[0].Message, response.Errors[0].Extensions.argumentName, response.Errors[0].Extensions.name)
+		return nil, responseBody, fmt.Errorf("error while querying user data: %v [%s:%s]", response.Errors[0].Message, response.Errors[0].Extensions.argumentName, response.Errors[0].Extensions.name)
 	}
 
 	return &response, responseBody, nil

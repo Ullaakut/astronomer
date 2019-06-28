@@ -33,13 +33,13 @@ const (
 
 var (
 	factorReferences = map[factorName]float64{
-		privateContributionFactor:  250,
-		contributionScoreFactor:    15000,
-		issueContributionFactor:    30,
-		commitContributionFactor:   300,
+		privateContributionFactor:  750,
+		contributionScoreFactor:    28000,
+		issueContributionFactor:    25,
+		commitContributionFactor:   500,
 		repoContributionFactor:     30,
 		prContributionFactor:       20,
-		prReviewContributionFactor: 15,
+		prReviewContributionFactor: 12,
 		accountAgeFactor:           1600,
 	}
 
