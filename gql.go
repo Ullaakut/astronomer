@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	usersPerRequest        = 15
+	usersPerRequest        = 20
 	iso8601Format          = "2006-01-02T15:04:05Z"
 	fetchStargazersRequest = `{"query" : "{
 			rateLimit {
@@ -49,7 +49,8 @@ type repositoryStarScan struct {
 type listStargazersResponse struct {
 	response `json:"data"`
 
-	Errors []gqlError `json:"errors"`
+	ErrorMessage string     `json:"message"`
+	Errors       []gqlError `json:"errors"`
 }
 
 type gqlError struct {

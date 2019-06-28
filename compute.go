@@ -50,8 +50,8 @@ var (
 		issueContributionFactor:    3,
 		commitContributionFactor:   3,
 		repoContributionFactor:     2,
-		prContributionFactor:       8,
-		prReviewContributionFactor: 16,
+		prContributionFactor:       2,
+		prReviewContributionFactor: 2,
 		contributionScoreFactor:    8,
 		accountAgeFactor:           2,
 	}
