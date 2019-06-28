@@ -3,6 +3,7 @@
 <p align="center">
     <img width="300" src="img/logo.png"/>
 </p>
+
 <p align="center">
     <a href="#license">
         <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat" />
@@ -87,7 +88,7 @@ Ideally, this should be a GitHub feature. The issue is that it's actually almost
 
 ## Thanks
 
-Thanks to the authors of [spencerkimball/stargazers](https://github.com/spencerkimball/stargazers) and the [GitHub contributions API](https://github.com/Didericis/github-contributions-api) 🙏
+Thanks to the authors of [spencerkimball/stargazers](https://github.com/spencerkimball/stargazers) 🙏
 
 ## License
 
