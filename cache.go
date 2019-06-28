@@ -17,8 +17,8 @@ import (
 // supplied request's URL. If found, the file contains a cached copy
 // of the HTTP response. The contents are read into an http.Response
 // object and returned.
-func getCache(ctx context, req *http.Request, page int) (*http.Response, error) {
-	filename := cacheEntryFilename(ctx, req.URL.String()+fmt.Sprint(page))
+func getCache(ctx context, req *http.Request, pagination string) (*http.Response, error) {
+	filename := cacheEntryFilename(ctx, req.URL.String()+pagination)
 	pathToCreate := path.Dir(filename)
 
 	if err := os.MkdirAll(pathToCreate, os.ModeDir|0755); err != nil {
@@ -48,8 +48,8 @@ func readCachedResponse(filename string, req *http.Request) (*http.Response, err
 }
 
 // putCache puts the supplied http.Response into the cache.
-func putCache(ctx context, req *http.Request, page int, body []byte) error {
-	filename := cacheEntryFilename(ctx, req.URL.String()+fmt.Sprint(page))
+func putCache(ctx context, req *http.Request, pagination string, body []byte) error {
+	filename := cacheEntryFilename(ctx, req.URL.String()+pagination)
 	f, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("unable to create cache file: %v", err)

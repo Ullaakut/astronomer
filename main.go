@@ -36,20 +36,14 @@ func detectFakeStars(repository string) error {
 		repoName:           repoInfo[1],
 		githubToken:        os.Getenv("GITHUB_TOKEN"),
 		cacheDirectoryPath: "./data",
+		scanUntilYear:      2013,
 	}
 
-	// users, err := loadState(ctx)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to load saved stargazer data: %s", err)
-	// }
-
-	// if users == nil {
 	disgo.Infof("Beginning fetching process for repository %q\n", repository)
 	users, err := fetchStargazers(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to query stargazer data: %s", err)
 	}
-	// }
 
 	if len(users) < 300 {
 		disgo.Infoln(style.Important("This repository appears to have a low amount of stargazers. Trust calculations might not be accurate."))
