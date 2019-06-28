@@ -40,7 +40,9 @@ func fetchStargazers(ctx context) ([]user, error) {
 	client := &http.Client{}
 
 	// Iterate on lists of users.
+	var page int
 	for {
+		page++
 		// Inject variables into request body.
 		paginatedRequestBody := strings.Replace(requestBody, "$pagination", fmt.Sprint(usersPerRequest), 1)
 
@@ -70,22 +72,21 @@ func fetchStargazers(ctx context) ([]user, error) {
 			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", ctx.githubToken))
 			req.Header.Set("User-Agent", "Astronomer")
 
-			// resp, err := getCache(ctx, req)
-			// if err != nil {
-			// 	return nil, fmt.Errorf("unable to get cached file: %v", err)
-			// }
-
-			// if resp == nil {
-			resp, err := client.Do(req)
+			resp, err := getCache(ctx, req, page)
 			if err != nil {
-				return nil, fmt.Errorf("unable to fetch stargazers: %v", err)
+				return nil, fmt.Errorf("unable to get cached file: %v", err)
 			}
-			// }
 
-			defer resp.Body.Close()
+			if resp == nil {
+				resp, err = client.Do(req)
+				if err != nil {
+					return nil, fmt.Errorf("unable to fetch stargazers: %v", err)
+				}
+			}
 
 			responseBody, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
+				resp.Body.Close()
 				return nil, fmt.Errorf("unable to read response body: %v", err)
 			}
 
@@ -93,15 +94,18 @@ func fetchStargazers(ctx context) ([]user, error) {
 			err = json.Unmarshal(responseBody, &response)
 			if err != nil {
 				disgo.Errorf("Response: %s\n", responseBody)
+				resp.Body.Close()
 				return nil, fmt.Errorf("unable to unmarshal stargazers: %v", err)
 			}
 
 			if len(response.Errors) != 0 {
+				resp.Body.Close()
 				return nil, fmt.Errorf("error while querying user data: %v [%s:%s]", response.Errors[0].Message, response.Errors[0].Extensions.argumentName, response.Errors[0].Extensions.name)
 			}
 
 			// We reached the end.
 			if len(response.Repository.Stargazers.Users) == 0 {
+				resp.Body.Close()
 				return users, nil
 			}
 
@@ -109,7 +113,7 @@ func fetchStargazers(ctx context) ([]user, error) {
 
 			cursor = response.Repository.Stargazers.Meta.cursor()
 
-			err = putCache(ctx, req, resp)
+			err = putCache(ctx, req, page, responseBody)
 			if err != nil {
 				return users, fmt.Errorf("unable to write user data to cache: %v", err)
 			}

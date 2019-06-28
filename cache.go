@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io/ioutil"
@@ -18,8 +17,8 @@ import (
 // supplied request's URL. If found, the file contains a cached copy
 // of the HTTP response. The contents are read into an http.Response
 // object and returned.
-func getCache(ctx context, req *http.Request) (*http.Response, error) {
-	filename := cacheEntryFilename(ctx, req.URL.String())
+func getCache(ctx context, req *http.Request, page int) (*http.Response, error) {
+	filename := cacheEntryFilename(ctx, req.URL.String()+fmt.Sprint(page))
 	pathToCreate := path.Dir(filename)
 
 	if err := os.MkdirAll(pathToCreate, os.ModeDir|0755); err != nil {
@@ -43,32 +42,30 @@ func readCachedResponse(filename string, req *http.Request) (*http.Response, err
 		return nil, err
 	}
 
-	return http.ReadResponse(bufio.NewReader(bytes.NewBuffer(body)), req)
+	return &http.Response{
+		Body: ioutil.NopCloser(bytes.NewReader(body)),
+	}, nil
 }
 
 // putCache puts the supplied http.Response into the cache.
-func putCache(ctx context, req *http.Request, resp *http.Response) error {
-	defer resp.Body.Close()
-
-	filename := cacheEntryFilename(ctx, req.URL.String())
+func putCache(ctx context, req *http.Request, page int, body []byte) error {
+	filename := cacheEntryFilename(ctx, req.URL.String()+fmt.Sprint(page))
 	f, err := os.Create(filename)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to create cache file: %v", err)
+	}
+	defer f.Close()
+
+	_, err = f.Write(body)
+	if err != nil {
+		return fmt.Errorf("unable to write response in cache file: %v", err)
 	}
 
-	if err := resp.Write(f); err != nil {
-		f.Close()
-		return err
-	}
-
-	f.Close()
-
-	readResp, err := readCachedResponse(filename, req)
+	_, err = readCachedResponse(filename, req)
 	if err != nil {
 		return err
 	}
 
-	resp.Body = readResp.Body
 	return nil
 }
 
