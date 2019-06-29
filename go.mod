@@ -1,4 +1,4 @@
-module github.com/ullaakut/github-fake-stars-detector
+module github.com/ullaakut/astronomer
 
 go 1.12
 
