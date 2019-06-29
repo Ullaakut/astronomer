@@ -5,41 +5,73 @@ import (
 	"os"
 	"strings"
 
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"github.com/ullaakut/disgo"
 	"github.com/ullaakut/disgo/style"
 )
 
-func main() {
-	args := os.Args[1:]
+func parseArguments() error {
+	viper.SetEnvPrefix("astronomer")
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 
-	if len(args) != 1 {
-		disgo.Errorln(style.Failure(style.SymbolCross, " Invalid number of arguments. Only argument should be the repository name (owner/repository)"))
-		os.Exit(1)
+	pflag.BoolP("details", "d", false, "Show more detailed trust factors, such as percentiles")
+	pflag.StringP("cachedir", "c", "./data", "Set the directory in which to store cache data")
+
+	viper.AutomaticEnv()
+
+	pflag.Parse()
+
+	err := viper.BindPFlags(pflag.CommandLine)
+	if err != nil {
+		return err
 	}
 
-	if err := detectFakeStars(args[0]); err != nil {
-		disgo.Errorln(style.Failure(style.SymbolCross, " ", err))
-		os.Exit(1)
+	if viper.GetBool("help") || len(pflag.Args()) == 0 {
+		disgo.Infoln("Missing required repository argument")
+		pflag.Usage()
+		os.Exit(0)
 	}
+
+	return nil
 }
 
-func detectFakeStars(repository string) error {
+func main() {
 	disgo.SetTerminalOptions(disgo.WithColors(true), disgo.WithDebug(true))
+
+	err := parseArguments()
+	if err != nil {
+		disgo.Errorln(style.Failure(style.SymbolCross, err))
+		os.Exit(1)
+	}
+
+	repository := pflag.Arg(0)
 
 	repoInfo := strings.Split(repository, "/")
 	if len(repoInfo) != 2 {
-		return fmt.Errorf("invalid repository %q: should be of the form \"repoOwner/repoName\"", repository)
+		disgo.Errorln(style.Failure(style.SymbolCross, "invalid repository %q: should be of the form \"repoOwner/repoName\"", repository))
+		os.Exit(1)
 	}
 
 	ctx := context{
 		repoOwner:          repoInfo[0],
 		repoName:           repoInfo[1],
-		githubToken:        os.Getenv("GITHUB_TOKEN"),
-		cacheDirectoryPath: "./data",
 		scanUntilYear:      2013,
+		githubToken:        os.Getenv("GITHUB_TOKEN"),
+		cacheDirectoryPath: viper.GetString("cachedir"),
+		details:            viper.GetBool("details"),
 	}
 
-	disgo.Infof("Beginning fetching process for repository %q\n", repository)
+	if err := detectFakeStars(ctx); err != nil {
+		disgo.Errorln(style.Failure(style.SymbolCross, " ", err))
+		os.Exit(1)
+	}
+}
+
+func detectFakeStars(ctx context) error {
+	disgo.SetTerminalOptions(disgo.WithColors(true), disgo.WithDebug(true))
+
+	disgo.Infof("Beginning fetching process for repository %s/%s\n", ctx.repoOwner, ctx.repoName)
 	users, err := fetchStargazers(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to query stargazer data: %s", err)
@@ -49,13 +81,13 @@ func detectFakeStars(repository string) error {
 		disgo.Infoln(style.Important("This repository appears to have a low amount of stargazers. Trust calculations might not be accurate."))
 	}
 
-	report, err := computeTrustReport(users)
+	report, err := computeTrustReport(ctx, users)
 	if err != nil {
 		disgo.Infof("%+v\n", report)
 		return fmt.Errorf("failed to analyze stargazer data: %v", err)
 	}
 
-	renderReport(report)
+	renderReport(ctx.details, report)
 
 	disgo.Infof("%s Analysis successful. %d users computed.\n", style.Success(style.SymbolCheck), len(users))
 

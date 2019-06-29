@@ -27,7 +27,7 @@ const (
 )
 
 // renderReport prints a
-func renderReport(report *trustReport) {
+func renderReport(details bool, report *trustReport) {
 	if report == nil {
 		disgo.Errorln(style.Failure(style.SymbolCross, " No report to render."))
 		return
@@ -39,8 +39,12 @@ func renderReport(report *trustReport) {
 		printTrustFactor(string(factorName), report.factors[factorName])
 	}
 
-	for _, percentile := range percentiles {
-		printPercentile(percentile, report.percentiles[percentile])
+	if report.percentiles != nil {
+		for _, percentile := range percentiles {
+			printPercentile(percentile, report.percentiles[percentile])
+		}
+	} else if details {
+		disgo.Errorln(style.Failure(style.SymbolCross), "Not enough stargazers to be able to compute percentiles.")
 	}
 
 	printResult("Overall trust", report.factors[overallTrust])
