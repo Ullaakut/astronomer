@@ -39,26 +39,37 @@ I am planning on soon also computing every 5th percentile (`5`, `10`, `15` and s
 ## Examples
 
 <p align="left">
-    <img width="65%" src="img/cameradar.png">
+    <img width="65%" src="img/traefik.png">
 </p>
 <p align="right">
     <img width="65%" src="img/suspicious_repo.png">
 </p>
 <p align="left">
-    <img width="65%" src="img/flaeg.png">
+    <img width="65%" src="img/envoy.png">
 </p>
 
 ## How to use it
+
+### Docker image
 
 In order to use Astronomer, you'll need a GitHub token with `repo` read rights. You can generate one [in your GitHub Settings > Developer settings > Personal Access Tokens](https://github.com/settings/tokens). Make sure to keep this token secret. You will also need to have docker installed.
 
 Run `docker pull ullaakut/astronomer`.
 
-Then, use the astronomer docker image like such: `docker run -t -e GITHUB_TOKEN=$GITHUB_TOKEN -v "/path/to/your/cache/folder:/data/" ullaakut/astronomer myusername/myrepository`
+Then, use the astronomer docker image like such: `docker run -t -e GITHUB_TOKEN=$GITHUB_TOKEN -v "/path/to/your/cache/folder:/data/" ullaakut/astronomer repositoryOwner/repositoryName -d`
 
 * The `-t` flag allows you to get a colored output. You can remove it from the command line if you don't care about this.
 * The `-e GITHUB_TOKEN=<your_token>` option is mandatory. The GitHub API won't authorize any requests without it.
 * The `-v "/path/to/your/cache/folder:/data/"` option can be used to cache the responses from the GitHub API on your machine. This means that the next time you run a scan, Astronomer will simply update its cache with the new stargazers since your last scan, and compute the trust levels again. It is highly recommended to use cache if you plan on scanning popular repositories (more than 1000 stars) more than once.
+* The `-d` flag enables more detailed trust factor computation.
+
+### Binary
+
+## Arguments and options
+
+* It is required to specify a repository in the form `repositoryOwner/repositoryName`. This argument's position does not matter.
+* **`-d, --debug`**: Show more detailed trust factors, such as percentiles (default: false)
+* **`-c, --cachedir` (string)**: Set the directory in which to store cache data (default: `./data`)
 
 ## Questions & Answers
 
@@ -72,11 +83,11 @@ Repositories with high amounts of stars, especially when they arrive in bursts, 
 
 > _Why is `Astronomer` so slow? It's been scanning a project for hours._
 
-Astronomer needs to make a lot of queries to the GitHub API in order to fetch all of the user data. It typically needs to do one request per page of stargazers per year of contributions, (as of 2019 that's 11 requests per 30 users). The issue is that the GitHub API is rate limited to 5000 requests per hour, so for a scan of 25000 stars for example, about 9000 requests are required, which will result in at least a two hour scan. I plan on contacting GitHub to try to get a token with more flexible rate limiting, since I believe this project is beneficial to their business, but I'm not confident this request will be accepted.
+Astronomer needs to make a lot of queries to the GitHub API in order to fetch all of the user data. It typically needs to do one request per page of stargazers per year of contributions, (as of 2019 that's 11 requests per 30 users). The issue is that the GitHub API is rate limited to 5000 requests per hour, so for a scan of 25000 stars for example, about 9000 requests are required, which will result in at least a two hour scan (takes about 6 hours on my machine/network). I plan on contacting GitHub to try to get a token with more flexible rate limiting, since I believe this project is beneficial to their business, but I'm not confident this request will be accepted.
 
 > _How can I contribute to this project?_
 
-If you have a strong math background, knowledge in statistics and analytics, or in general believe you could make the trust algorithm smarter, please contact me, or at least feel free to open a feature request describing what algorithm you think would work better.
+If you have a strong math background, knowledge in statistics and analytics, or in general believe you could make the trust algorithm smarter, please contact me, or at least feel free to open a feature request describing what algorithm you think would work better. A feature that I would be especially interested in is computing the curve of percentile values for each trust factor and compare it to a reference curve, in order to detect inconsistencies.
 
 If you are a software engineer or a web developer (or both), you could also participate in helping to build the next version of Astronomer: an API and a web application to let people scan whatever repositories they want for fake stars, and see previously generated reports through a web interface. It would make it easy for everyone to check whether or not a repository's stargazers are legit.
 
@@ -88,7 +99,9 @@ Ideally, this should be a GitHub feature. The issue is that it's actually almost
 
 ## Thanks
 
-Thanks to the authors of [spencerkimball/stargazers](https://github.com/spencerkimball/stargazers) 🙏
+Thanks to the authors of [spencerkimball/stargazers](https://github.com/spencerkimball/stargazers) who greatly inspired the early design of this project 🙏
+
+The original Go gopher was designed by [Renee French](http://reneefrench.blogspot.com).
 
 ## License
 
