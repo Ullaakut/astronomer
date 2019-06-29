@@ -65,11 +65,12 @@ func fetchStargazers(ctx context) ([]user, error) {
 		// Inject variables into request body.
 		paginatedRequestBody := strings.Replace(requestBody, "$pagination", fmt.Sprint(usersPerRequest), 1)
 
-		// // HACK: Hardcoded skip because of user https://github.com/jstrachan
-		// // which has a broken profile that breaks the API 100% of the time.
-		// if page == 116 {
-		// 	cursor = "Y3Vyc29yOnYyOpIAzgOLi4k="
-		// }
+		// HACK: Hardcoded skip because of user https://github.com/jstrachan
+		// which has a broken profile that breaks the API 100% of the time.
+		// See FAQ in README.md for more details on this.
+		if ctx.repoOwner == "containous" && ctx.repoName == "traefik" && page == 116 {
+			cursor = "Y3Vyc29yOnYyOpIAzgOLi4k="
+		}
 
 		// If this isn't the first request, inject the cursor value.
 		if cursor != "" {
