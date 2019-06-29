@@ -8,6 +8,9 @@
     <a href="#license">
         <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat" />
     </a>
+    <a href="https://hub.docker.com/r/ullaakut/astronomer/">
+        <img src="https://img.shields.io/docker/pulls/ullaakut/astronomer.svg?style=flat" />
+    </a>
     <a href="https://goreportcard.com/report/github.com/ullaakut/astronomer">
         <img src="https://goreportcard.com/badge/github.com/ullaakut/astronomer" />
     </a>
@@ -102,6 +105,10 @@ Also, if you have data to backup a claim that you have a better value for the go
 > _What is the end goal of this project?_
 
 Ideally, this should be a GitHub feature. The issue is that it's actually almost impossible to differentiate a bot account and the account of someone who just created a GH account to star a repository and show their support, which can lead to angry customers for GitHub if they chose to ban potentially illegitimate accounts. It's also very easy for people who make bot accounts to make them seem legit by creating private repositories with daily contributions, but this can also be detected to some extent, if it's a trend that ends up appearing.
+
+> _What's the strange hardcoded skip in the `query.go` file?_
+
+Unfortunately there's an issue in the GitHub API, where [this user](https://github.com/jstrachan) has so many contributions that all API requests that would contain his contributions time out, consistently. Since he starred `containous/traefik`, I had to hardcode a skip in order to allow the scan to continue (since the GH API's only method of pagination is to use the `cursor` returned by the user node, I had to manually get his cursor value myself and hardcode it. Writing logic to handle this case generically whenever it happens would be possible but I'm not sure it's a priority right now). I've sent a support request to GitHub so when they fix it, I'll make sure to remove this skip.
 
 ## Thanks
 
