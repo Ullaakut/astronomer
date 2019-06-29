@@ -27,7 +27,7 @@ const (
 )
 
 // renderReport prints a
-func renderReport(report trustReport) {
+func renderReport(report *trustReport) {
 	if report == nil {
 		disgo.Errorln(style.Failure(style.SymbolCross, " No report to render."))
 		return
@@ -36,10 +36,14 @@ func renderReport(report trustReport) {
 	printHeader()
 
 	for _, factorName := range factors {
-		printTrustFactor(string(factorName), report[factorName])
+		printTrustFactor(string(factorName), report.factors[factorName])
 	}
 
-	printResult("Overall trust", report[overallTrust])
+	for _, percentile := range percentiles {
+		printPercentile(percentile, report.percentiles[percentile])
+	}
+
+	printResult("Overall trust", report.factors[overallTrust])
 }
 
 // printHeader prints the header containing each category name and underlines them.
@@ -72,6 +76,23 @@ func printHeader() {
 // printTrustFactor prints a trust factor in the following format:
 // FactorName:                  Score             Trust%
 func printTrustFactor(trustFactorName string, trustFactor trustFactor) {
+	format := tabulateFormat(trustFactorsFormat, trustFactorName, firstColumnLength)
+	format = tabulateFormat(format, fmt.Sprintf("%1.f", trustFactor.value), secondColumnLength)
+
+	if trustFactor.trustPercent < 0.25 {
+		disgo.Infof(format, trustFactorName, style.Failure(fmt.Sprintf("%1.f", trustFactor.value)), style.Failure(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
+	} else if trustFactor.trustPercent < 0.75 {
+		disgo.Infof(format, trustFactorName, style.Important(fmt.Sprintf("%1.f", trustFactor.value)), style.Important(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
+	} else {
+		disgo.Infof(format, trustFactorName, style.Success(fmt.Sprintf("%1.f", trustFactor.value)), style.Success(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
+	}
+}
+
+// printPercentile prints a percentile value in the following format:
+// xth percentile:                  Score             Trust%
+func printPercentile(percentile float64, trustFactor trustFactor) {
+	trustFactorName := fmt.Sprintf("%2.fth percentile", percentile)
+
 	format := tabulateFormat(trustFactorsFormat, trustFactorName, firstColumnLength)
 	format = tabulateFormat(format, fmt.Sprintf("%1.f", trustFactor.value), secondColumnLength)
 
