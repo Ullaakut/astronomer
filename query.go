@@ -31,6 +31,10 @@ type context struct {
 	// ignores value from users who were active since
 	// the beginning of GitHub.
 	scanUntilYear int
+
+	// If details is set to true, astronomer will print
+	// additional factors such as percentiles.
+	details bool
 }
 
 func fetchStargazers(ctx context) ([]user, error) {
@@ -85,8 +89,6 @@ func fetchStargazers(ctx context) ([]user, error) {
 			yearlyRequestBody := strings.Replace(paginatedRequestBody, "$dateFrom", from.Format(iso8601Format), 1)
 			yearlyRequestBody = strings.Replace(yearlyRequestBody, "$dateTo", to.Format(iso8601Format), 1)
 
-			// fmt.Println(string(yearlyRequestBody))
-
 			req, err := http.NewRequest("POST", "https://api.github.com/graphql", bytes.NewBuffer([]byte(yearlyRequestBody)))
 			if err != nil {
 				return nil, disgo.FailStepf("unable to prepare request: %v", err)
@@ -105,7 +107,7 @@ func fetchStargazers(ctx context) ([]user, error) {
 			// If the request was not found in the cache, try to fetch it until it works
 			// or until the limit of 20 attempts is reached.
 			if resp == nil {
-				disgo.StartStepf("Fetching stargazers %d to %d", page*usersPerRequest, (page+1)*usersPerRequest)
+				disgo.StartStepf("Fetching stargazers %d to %d for year %d", (page-1)*usersPerRequest, (page)*usersPerRequest, currentYear-i)
 
 				var attempts int
 				backoff.Retry(func() error {

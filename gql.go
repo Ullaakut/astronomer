@@ -16,7 +16,7 @@ const (
 				remaining
 				resetAt
 			}
-			repository(owner: $repoOwner, name: $repoName) {
+			repository(owner: \"$repoOwner\", name: \"$repoName\") {
 				stargazers(first: $pagination) {
 					edges {
 						cursor
