@@ -19,8 +19,8 @@
     </a>
 </p>
 
-Astronomer is a tool to fetch data from every GitHub user who starred a common repository and compute how likely it is that those users are real humans.
-The goal of this tool is to **detect illegitimate GitHub stars from bot accounts**, which could be used to artificially increase the popularity of an open source project.
+Astronomer is a tool that fetches data from every GitHub user who starred a common repository and computes how likely it is that those users are real humans.
+The goal of Astronomer is to **detect illegitimate GitHub stars from bot accounts**, which could be used to artificially increase the popularity of an open source project.
 
 ## Trust algorithm
 
@@ -34,22 +34,6 @@ Trust is computed based on many different factors:
 * The average amount of public code reviews
 * The average weighted contribution score (weighted by making older contributions more trustworthy)
 * The average account age, older is more trustworthy
-
-### Upcoming improvements
-
-I am planning on soon also computing every 5th percentile (`5`, `10`, `15` and so on) and try to detect any irregularity. This would mean that if at least 5% of the total stars are fake, they should result in an anomaly in at least one of those percentile values. It will be difficult to make this a precise estimation however, so it will not be available in the first version of Astronomer.
-
-## Examples
-
-<p align="left">
-    <img width="65%" src="img/traefik.png">
-</p>
-<p align="right">
-    <img width="65%" src="img/suspicious_repo.png">
-</p>
-<p align="left">
-    <img width="65%" src="img/envoy.png">
-</p>
 
 ## How to use it
 
@@ -79,6 +63,27 @@ The `astronomer` binary will then be available in `$GOPATH/bin/astronomer`.
 * It is required to specify a repository in the form `repositoryOwner/repositoryName`. This argument's position does not matter.
 * **`-d, --debug`**: Show more detailed trust factors, such as percentiles (default: false)
 * **`-c, --cachedir` (string)**: Set the directory in which to store cache data (default: `./data`)
+
+## Upcoming features
+
+In the future, Astronomer will hopefully:
+
+* Generate GitHub badges to show off that your repository is legit (thanks [@emilevauge](https://github.com/emilevauge) for the idea!)
+* Provide a web interface to request scans and get your badge
+
+Keep in mind that scans are always going to be long for huge repositories. A 10K+ stars repository will take multiple hours to scan.
+
+## Examples
+
+<p align="left">
+    <img width="65%" src="img/traefik.png">
+</p>
+<p align="right">
+    <img width="65%" src="img/suspicious_repo.png">
+</p>
+<p align="left">
+    <img width="65%" src="img/envoy.png">
+</p>
 
 ## Questions & Answers
 
