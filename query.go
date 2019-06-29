@@ -143,7 +143,6 @@ func fetchStargazers(ctx context) ([]user, error) {
 
 					if len(response.Repository.Stargazers.Users) == 0 {
 						resp.Body.Close()
-						disgo.Debugln("Reached end of user list")
 						return nil
 					}
 
