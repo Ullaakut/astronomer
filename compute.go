@@ -17,7 +17,10 @@ type factorName string
 
 // trustReport represents the result of the trust computation of a repository's
 // stargazers. It contains every trust factor that has been computed.
-type trustReport map[factorName]trustFactor
+type trustReport struct {
+	factors     map[factorName]trustFactor
+	percentiles map[float64]trustFactor
+}
 
 const (
 	privateContributionFactor  factorName = "Private contributions"
@@ -32,6 +35,19 @@ const (
 )
 
 var (
+	factors = []factorName{
+		contributionScoreFactor,
+		privateContributionFactor,
+		issueContributionFactor,
+		commitContributionFactor,
+		repoContributionFactor,
+		prContributionFactor,
+		prReviewContributionFactor,
+		accountAgeFactor,
+	}
+
+	percentiles = []float64{5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95}
+
 	factorReferences = map[factorName]float64{
 		privateContributionFactor:  600,
 		contributionScoreFactor:    24000,
@@ -41,6 +57,28 @@ var (
 		prContributionFactor:       20,
 		prReviewContributionFactor: 10,
 		accountAgeFactor:           1600,
+	}
+
+	percentileReferences = map[float64]float64{
+		5:  38,
+		10: 105,
+		15: 210,
+		20: 320,
+		25: 455,
+		30: 650,
+		35: 1000,
+		40: 1500,
+		45: 2000,
+		50: 3000,
+		55: 4000,
+		60: 5000,
+		65: 6500,
+		70: 9000,
+		75: 14000,
+		80: 20000,
+		85: 30000,
+		90: 55000,
+		95: 110000,
 	}
 
 	// factorWeights represents the importance of each factor in
@@ -55,22 +93,12 @@ var (
 		contributionScoreFactor:    8,
 		accountAgeFactor:           2,
 	}
-
-	factors = []factorName{
-		contributionScoreFactor,
-		privateContributionFactor,
-		issueContributionFactor,
-		commitContributionFactor,
-		repoContributionFactor,
-		prContributionFactor,
-		prReviewContributionFactor,
-		accountAgeFactor,
-	}
 )
 
 // computeTrustReport computes all trust factors for the stargazers of a repository.
-func computeTrustReport(users []user) (trustReport, error) {
+func computeTrustReport(users []user) (*trustReport, error) {
 	trustData := make(map[factorName][]float64)
+	scorePercentiles := make(map[float64]trustFactor)
 
 	now := time.Now().Year()
 
@@ -95,11 +123,26 @@ func computeTrustReport(users []user) (trustReport, error) {
 		trustData[contributionScoreFactor] = append(trustData[contributionScoreFactor], contributionScore)
 	}
 
-	return buildReport(trustData)
+	for _, percentile := range percentiles {
+		value, err := stats.Percentile(trustData[contributionScoreFactor], percentile)
+		if err != nil {
+			return nil, fmt.Errorf("unable to compute score trust %dth pervcentile: %v", percentile, err)
+		}
+
+		scorePercentiles[percentile] = trustFactor{
+			value:        value,
+			trustPercent: computeTrustFromScore(value, percentileReferences[percentile]),
+		}
+	}
+
+	return buildReport(trustData, scorePercentiles)
 }
 
-func buildReport(trustData map[factorName][]float64) (trustReport, error) {
-	report := trustReport{}
+func buildReport(trustData map[factorName][]float64, scorePercentiles map[float64]trustFactor) (*trustReport, error) {
+	report := &trustReport{
+		percentiles: scorePercentiles,
+		factors:     make(map[factorName]trustFactor),
+	}
 
 	for factor, data := range trustData {
 		score, err := stats.Mean(data)
@@ -108,7 +151,7 @@ func buildReport(trustData map[factorName][]float64) (trustReport, error) {
 		}
 
 		trustPercent := computeTrustFromScore(score, factorReferences[factor])
-		report[factor] = trustFactor{
+		report.factors[factor] = trustFactor{
 			value:        score,
 			trustPercent: trustPercent,
 		}
@@ -117,7 +160,7 @@ func buildReport(trustData map[factorName][]float64) (trustReport, error) {
 	var allTrust []float64
 	for factorName, weight := range factorWeights {
 		for i := 0; i < weight; i++ {
-			allTrust = append(allTrust, report[factorName].trustPercent)
+			allTrust = append(allTrust, report.factors[factorName].trustPercent)
 		}
 	}
 
@@ -126,7 +169,7 @@ func buildReport(trustData map[factorName][]float64) (trustReport, error) {
 		return nil, fmt.Errorf("unable to compute overall trust: %v", err)
 	}
 
-	report[overallTrust] = trustFactor{
+	report.factors[overallTrust] = trustFactor{
 		trustPercent: trust,
 	}
 
