@@ -65,6 +65,12 @@ Then, use the astronomer docker image like such: `docker run -t -e GITHUB_TOKEN=
 
 ### Binary
 
+You can also install the go binary by [enabling go modules](https://github.com/golang/go/wiki/Modules#how-to-use-modules) and running `go install github.com/ullaakut/astronomer`. Make sure that your `go` version is at least `1.11.x`.
+
+You can verify your `go` version by running `go version`.
+
+The `astronomer` binary will then be available in `$GOPATH/bin/astronomer`.
+
 ## Arguments and options
 
 * It is required to specify a repository in the form `repositoryOwner/repositoryName`. This argument's position does not matter.
