@@ -56,7 +56,6 @@ func main() {
 	ctx := context{
 		repoOwner:          repoInfo[0],
 		repoName:           repoInfo[1],
-		scanUntilYear:      2013,
 		githubToken:        os.Getenv("GITHUB_TOKEN"),
 		cacheDirectoryPath: viper.GetString("cachedir"),
 		details:            viper.GetBool("details"),
@@ -72,13 +71,18 @@ func detectFakeStars(ctx context) error {
 	disgo.SetTerminalOptions(disgo.WithColors(true), disgo.WithDebug(true))
 
 	disgo.Infof("Beginning fetching process for repository %s/%s\n", ctx.repoOwner, ctx.repoName)
-	users, err := fetchStargazers(ctx)
+	cursors, err := fetchStargazers(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to query stargazer data: %s", err)
 	}
 
-	if len(users) < 300 {
+	if len(cursors) < 300/contribPagination {
 		disgo.Infoln(style.Important("This repository appears to have a low amount of stargazers. Trust calculations might not be accurate."))
+	}
+
+	users, err := fetchContributions(ctx, cursors, 2013)
+	if err != nil {
+		return fmt.Errorf("failed to query stargazer data: %s", err)
 	}
 
 	report, err := computeTrustReport(ctx, users)
