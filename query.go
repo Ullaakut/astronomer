@@ -12,6 +12,8 @@ import (
 
 	"github.com/cenk/backoff"
 	"github.com/ullaakut/disgo"
+	"github.com/vbauerster/mpb/v4"
+	"github.com/vbauerster/mpb/v4/decor"
 )
 
 const year = 24 * time.Hour * 365
@@ -40,9 +42,23 @@ type context struct {
 	details bool
 }
 
+func buildRequestBody(ctx context, baseRequest string, pagination int) string {
+	// Inject constant values into request body.
+	requestBody := strings.Replace(baseRequest, "$repoOwner", ctx.repoOwner, 1)
+	requestBody = strings.Replace(requestBody, "$repoName", ctx.repoName, 1)
+	requestBody = strings.Replace(requestBody, "$pagination", fmt.Sprint(pagination), 1)
+
+	// Remove all `\n` so that it's valid JSON. Remove all spaces.
+	requestBody = strings.Replace(requestBody, "\t", "", -1)
+	requestBody = strings.Replace(requestBody, " ", "", -1)
+	requestBody = strings.Replace(requestBody, "\n", " ", -1)
+
+	return requestBody
+}
+
 // fetchStargazers fetches the list of cursors to iterate upon to
 // fetch stargazer contributions.
-func fetchStargazers(ctx context) ([]string, error) {
+func fetchStargazers(ctx context) (cursors []string, totalUsers int, err error) {
 	var (
 		stargazers     []stargazers
 		lastCursor     string
@@ -50,21 +66,12 @@ func fetchStargazers(ctx context) ([]string, error) {
 		rateLimitSleep time.Duration
 	)
 
-	// Inject constant values into request body.
-	requestBody := strings.Replace(fetchUsersRequest, "$repoOwner", ctx.repoOwner, 1)
-	requestBody = strings.Replace(requestBody, "$repoName", ctx.repoName, 1)
-	requestBody = strings.Replace(requestBody, "$pagination", fmt.Sprint(listPagination), 1)
-
-	// Remove all `\n` so that it's valid JSON. Remove all spaces.
-	requestBody = strings.Replace(requestBody, "\t", "", -1)
-	requestBody = strings.Replace(requestBody, " ", "", -1)
-	requestBody = strings.Replace(requestBody, "\n", " ", -1)
-
+	requestBody := buildRequestBody(ctx, fetchUsersRequest, listPagination)
 	client := &http.Client{}
 
 	defer disgo.EndStep()
 
-	disgo.StartStepf("Pre-fetching all stargazers")
+	disgo.StartStep("Pre-fetching all stargazers")
 
 	for {
 		page++
@@ -82,7 +89,7 @@ func fetchStargazers(ctx context) ([]string, error) {
 
 		req, err := http.NewRequest("POST", "https://api.github.com/graphql", bytes.NewBuffer([]byte(paginatedRequestBody)))
 		if err != nil {
-			return nil, disgo.FailStepf("unable to prepare request: %v", err)
+			return nil, 0, disgo.FailStepf("unable to prepare request: %v", err)
 		}
 
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", ctx.githubToken))
@@ -90,7 +97,7 @@ func fetchStargazers(ctx context) ([]string, error) {
 
 		resp, err := getCache(ctx, req, listFilePagination(page))
 		if err != nil {
-			return nil, disgo.FailStepf("unable to get cached file: %v", err)
+			return nil, 0, disgo.FailStepf("unable to get cached file: %v", err)
 		}
 
 		response, responseBody, _ := parseResponse(resp)
@@ -142,7 +149,7 @@ func fetchStargazers(ctx context) ([]string, error) {
 		}
 
 		if response == nil {
-			return nil, fmt.Errorf("failed to fetch stargazers. last body recieved: %s", responseBody)
+			return nil, 0, fmt.Errorf("failed to fetch stargazers. last body recieved: %s", responseBody)
 		}
 
 		stargazers = append(stargazers, response.Repository.Stargazers)
@@ -151,14 +158,20 @@ func fetchStargazers(ctx context) ([]string, error) {
 
 		if len(response.Errors) != 0 || response.ErrorMessage != "" {
 			disgo.Errorln("Errors:", response.ErrorMessage, response.Errors)
-			return nil, disgo.FailStepf("failed to fetch user contributions. last body recieved: %s", responseBody)
+			return nil, 0, disgo.FailStepf("failed to fetch user contributions. last body recieved: %s", responseBody)
 		}
 
 		err = putCache(ctx, req, listFilePagination(page), responseBody)
 		if err != nil {
-			return nil, disgo.FailStepf("unable to write user contribution data to cache: %v", err)
+			return nil, 0, disgo.FailStepf("unable to write user contribution data to cache: %v", err)
 		}
 
+		totalUsers += len(response.Repository.Stargazers.Users)
+
+		// TODO: This will break if the repository has a number of users that
+		// is a factor of ${listPagination}. In that case, it will loop forever.
+		// It would be nice to have a reliable way to figure out whether or not
+		// we reached the end of the list.
 		if len(response.Repository.Stargazers.Users) < listPagination {
 			disgo.Infoln("Reached end of stargazer list")
 			break
@@ -173,9 +186,9 @@ func fetchStargazers(ctx context) ([]string, error) {
 		}
 	}
 
-	cursors := getCursors(stargazers)
+	cursors = getCursors(stargazers)
 
-	return cursors, nil
+	return cursors, totalUsers, nil
 }
 
 // Return the appropriate cursors to be used by the fetchContributions function
@@ -187,8 +200,6 @@ func getCursors(sg []stargazers) []string {
 		totalUsers int
 		cursors    []string
 	)
-
-	// sg: {[1,2],[3,4],[5,6],[7,8],[9,10]}{[1,2],[3,4],[5]}
 
 	for _, stargazers := range sg {
 		var currentPageUsers int
@@ -227,34 +238,44 @@ func isBlacklisted(user string) bool {
 	return false
 }
 
+func setupProgressBar(pages int) *mpb.Bar {
+	p := mpb.New(mpb.WithWidth(64))
+
+	name := "Fetching user contributions:"
+	bar := p.AddBar(int64(pages*contribPagination),
+		mpb.BarStyle("[=>-]"),
+		mpb.PrependDecorators(
+			decor.Name(name, decor.WC{W: len(name) + 1, C: decor.DidentRight}),
+		),
+		mpb.AppendDecorators(
+			decor.Name("ETA: "),
+			decor.AverageETA(decor.ET_STYLE_GO),
+			decor.Name(" Elapsed: "),
+			decor.Elapsed(decor.ET_STYLE_GO),
+			decor.Name(" Progress: "),
+			decor.Percentage()),
+	)
+
+	return bar
+}
+
 // fetchContributions fetches the contribution data of a list of stargazers.
 // ctx contains the scanned context of the astronomer command.
 // untilYear is the year until which to scan for contribuitons.
 func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, error) {
 	var (
-		requestBody    string
 		users          []user
 		rateLimitSleep time.Duration
 	)
 
-	// Inject constant values into request body.
-	requestBody = strings.Replace(fetchContributionsRequest, "$repoOwner", ctx.repoOwner, 1)
-	requestBody = strings.Replace(requestBody, "$repoName", ctx.repoName, 1)
-	requestBody = strings.Replace(requestBody, "$pagination", fmt.Sprint(contribPagination), 1)
-
-	// Remove all `\n` so that it's valid JSON. Remove all spaces.
-	requestBody = strings.Replace(requestBody, "\t", "", -1)
-	requestBody = strings.Replace(requestBody, " ", "", -1)
-	requestBody = strings.Replace(requestBody, "\n", " ", -1)
-
+	requestBody := buildRequestBody(ctx, fetchContributionsRequest, contribPagination)
 	client := &http.Client{}
 
-	defer disgo.EndStep()
+	progressBar := setupProgressBar(len(cursors) + 1)
 
 	// Iterate on pages of user contributions, following the cursors generated
 	// in fetchStargazers.
 	for page := 1; page <= len(cursors)+1; page++ {
-
 		// If this isn't the first page, inject the cursor value.
 		paginatedRequestBody := requestBody
 		if page > 1 {
@@ -268,31 +289,41 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 		// Get all user contributions for each year.
 		currentYear := time.Now().Year()
 		for i := 0; currentYear-i > untilYear-1; i++ {
+
+			// Store start time in order to compute ETA for the progress bar.
+			startTime := time.Now()
+
+			// Inject the dates corresponding to the year we're scanning, into the request body.
 			from := time.Date(currentYear-i, time.January, 1, 0, 0, 0, 0, time.UTC)
 			to := from.Add(year - 1*time.Second)
 
 			yearlyRequestBody := strings.Replace(paginatedRequestBody, "$dateFrom", from.Format(iso8601Format), 1)
 			yearlyRequestBody = strings.Replace(yearlyRequestBody, "$dateTo", to.Format(iso8601Format), 1)
 
+			// Prepare the HTTP request.
 			req, err := http.NewRequest("POST", "https://api.github.com/graphql", bytes.NewBuffer([]byte(yearlyRequestBody)))
 			if err != nil {
-				return nil, disgo.FailStepf("unable to prepare request: %v", err)
+				return nil, fmt.Errorf("unable to prepare request: %v", err)
 			}
 
+			// Inject GitHub token for API authorization.
 			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", ctx.githubToken))
 			req.Header.Set("User-Agent", "Astronomer")
 
+			// Try to get a cached response to this request.
 			resp, err := getCache(ctx, req, contribFilePagination(page, currentYear-i))
 			if err != nil {
-				return nil, disgo.FailStepf("unable to get cached file: %v", err)
+				return nil, fmt.Errorf("unable to get cached file: %v", err)
 			}
 
 			response, responseBody, _ := parseResponse(resp)
 
+			cachedFileFound := resp != nil
+
 			// If the request was not found in the cache, try to fetch it until it works
 			// or until the limit of 20 attempts is reached.
-			if resp == nil {
-				disgo.StartStepf("Fetching user contributions from users %d to %d for year %d", (page-1)*contribPagination, (page)*contribPagination, currentYear-i)
+			if !cachedFileFound {
+				// disgo.StartStepf("Fetching user contributions from users %d to %d for year %d", (page-1)*contribPagination, (page)*contribPagination, currentYear-i)
 
 				var attempts int
 				backoff.Retry(func() error {
@@ -318,7 +349,7 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 
 					response, responseBody, err = parseResponse(resp)
 					if err != nil {
-						return err
+						return fmt.Errorf("unable to parse response: %v", err)
 					}
 
 					if len(response.Errors) != 0 || response.ErrorMessage != "" {
@@ -328,6 +359,8 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 						return errors.New(response.Errors[0].Message)
 					}
 
+					// If there is no error and no users in the response body, it must mean
+					// that we reached the end of the user list.
 					if len(response.Repository.Stargazers.Users) == 0 {
 						resp.Body.Close()
 						return nil
@@ -341,37 +374,39 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 				return nil, fmt.Errorf("failed to fetch user contributions. last body recieved: %s", responseBody)
 			}
 
+			// Update list of users with users from reponse.
 			users = updateUsers(users, *response, currentYear-i)
 
 			if len(response.Errors) != 0 || response.ErrorMessage != "" {
 				disgo.Errorln("Errors:", response.ErrorMessage, response.Errors)
-				return nil, disgo.FailStepf("failed to fetch user contributions. last body recieved: %s", responseBody)
+				return nil, fmt.Errorf("failed to fetch user contributions. last body recieved: %s", responseBody)
 			}
 
-			err = putCache(ctx, req, contribFilePagination(page, currentYear-i), responseBody)
-			if err != nil {
-				return users, disgo.FailStepf("unable to write user contribution data to cache: %v", err)
+			// If file was fetched, write it in the cache. If we already got it from the cache,
+			// no need to rewrite it.
+			if !cachedFileFound {
+				err = putCache(ctx, req, contribFilePagination(page, currentYear-i), responseBody)
+				if err != nil {
+					return users, fmt.Errorf("unable to write user contribution data to cache: %v", err)
+				}
 			}
 
+			// If we approach the rate limit, slow the requests down.
 			if response.RateLimit.Remaining <= 10 {
-				disgo.Debugln("Rate limit reached, slowing down requests")
+				disgo.Infoln("Rate limit reached, slowing down requests")
 				rateLimitSleep = rateLimitSleepDuration
 			}
-		}
 
-		disgo.EndStep()
+			// Update progress bar.
+			progressBar.IncrBy(contribPagination/(currentYear-untilYear), time.Since(startTime))
+		}
 	}
 
 	return users, nil
 }
 
-func contribFilePagination(page, year int) string {
-	return fmt.Sprintf("-%d-%d", page, year)
-}
-func listFilePagination(page int) string {
-	return fmt.Sprintf("-list-%d", page)
-}
-
+// parseResponse parses a response from the GitHub API and converts it in the appropriate data model.
+// It also returns the response body if it was read successfully.
 func parseResponse(resp *http.Response) (*listStargazersResponse, []byte, error) {
 	if resp == nil {
 		return nil, nil, errors.New("unable to parse nil response")
@@ -386,7 +421,7 @@ func parseResponse(resp *http.Response) (*listStargazersResponse, []byte, error)
 	var response listStargazersResponse
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
-		disgo.Errorf("Response: %s\n", responseBody)
+		disgo.Errorf("Unable to parse body: %s\n", responseBody)
 		resp.Body.Close()
 		return nil, responseBody, fmt.Errorf("unable to unmarshal stargazers: %v", err)
 	}
@@ -425,6 +460,7 @@ func updateUsers(users []user, response listStargazersResponse, year int) []user
 		}
 	}
 
+	// Otherwise, create the list of users and set their contributions appropriately.
 	if !found {
 		for idx := range newUsers {
 			newUsers[idx].yearlyContributions = make(map[int]int)
@@ -436,7 +472,3 @@ func updateUsers(users []user, response listStargazersResponse, year int) []user
 
 	return users
 }
-
-// func loadState(ctx context) ([]users, error) {
-
-// }
