@@ -71,14 +71,16 @@ func detectFakeStars(ctx context) error {
 	disgo.SetTerminalOptions(disgo.WithColors(true), disgo.WithDebug(true))
 
 	disgo.Infof("Beginning fetching process for repository %s/%s\n", ctx.repoOwner, ctx.repoName)
-	cursors, err := fetchStargazers(ctx)
+	cursors, totalUsers, err := fetchStargazers(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to query stargazer data: %s", err)
 	}
 
-	if len(cursors) < 300/contribPagination {
+	if totalUsers < 300 {
 		disgo.Infoln(style.Important("This repository appears to have a low amount of stargazers. Trust calculations might not be accurate."))
 	}
+
+	disgo.Infof("Fetching contributions for %d users up to year %d\n", totalUsers, 2013)
 
 	users, err := fetchContributions(ctx, cursors, 2013)
 	if err != nil {

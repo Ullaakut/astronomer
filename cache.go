@@ -88,3 +88,15 @@ func Clear(ctx context) error {
 	filename := filepath.Join(ctx.cacheDirectoryPath, ctx.repoOwner, ctx.repoName)
 	return os.RemoveAll(filename)
 }
+
+// listilePagination generates the pagination to append to the cache file names
+// for stargazer lists.
+func listFilePagination(page int) string {
+	return fmt.Sprintf("-list-%d", page)
+}
+
+// contribFilePagination generates the pagination to append to the cache file names
+// for user contribution data.
+func contribFilePagination(page, year int) string {
+	return fmt.Sprintf("-%d-%d", page, year)
+}

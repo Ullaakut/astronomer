@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	// Ask for 100 users per query when listing stargazers.
+	// Request 100 users per query when listing stargazers.
 	listPagination = 100
-	// Ask for 20 users per query when fetching contribution data.
+
+	// Request 20 users per query when fetching contribution data.
 	contribPagination = 20
 
 	// ISO8601 time format used by the GitHub API.
@@ -63,11 +64,6 @@ const (
 			}
 		}"}`
 )
-
-type repositoryStarScan struct {
-	users     []user
-	updatedAt time.Time
-}
 
 type listStargazersResponse struct {
 	response `json:"data"`
