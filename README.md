@@ -22,6 +22,10 @@
 Astronomer is a tool that fetches data from every GitHub user who starred a common repository and computes how likely it is that those users are real humans.
 The goal of Astronomer is to **detect illegitimate GitHub stars from bot accounts**, which could be used to artificially increase the popularity of an open source project.
 
+<p align="center">
+    <img width="75%" src="img/astronomer.gif">
+</p>
+
 ## Trust algorithm
 
 Trust is computed based on many different factors:
