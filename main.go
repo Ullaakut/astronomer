@@ -80,6 +80,8 @@ func detectFakeStars(ctx context) error {
 		disgo.Infoln(style.Important("This repository appears to have a low amount of stargazers. Trust calculations might not be accurate."))
 	}
 
+	// For now, we only fetch contributions until 2013. It will be configurable later on
+	// once the algorithm is more accurate and more data has been fetched.
 	disgo.Infof("Fetching contributions for %d users up to year %d\n", totalUsers, 2013)
 
 	users, err := fetchContributions(ctx, cursors, 2013)
@@ -89,8 +91,8 @@ func detectFakeStars(ctx context) error {
 
 	report, err := computeTrustReport(ctx, users)
 	if err != nil {
-		disgo.Infof("%+v\n", report)
-		return fmt.Errorf("failed to analyze stargazer data: %v", err)
+		disgo.Errorf("Unable to compute trust report %+v\n", report)
+		return fmt.Errorf("unable to compute trust report: %v", err)
 	}
 
 	renderReport(ctx.details, report)

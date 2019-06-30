@@ -13,7 +13,7 @@ const (
 )
 
 // TODO: If we allow users to choose the year until which
-// to scam, references will be needed for each year.
+// to scan, references will be needed for each year.
 var (
 	factors = []factorName{
 		contributionScoreFactor,
@@ -28,6 +28,8 @@ var (
 
 	percentiles = []float64{5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95}
 
+	// References are based on the average values of values typically
+	// found on popular repositories.
 	factorReferences = map[factorName]float64{
 		privateContributionFactor:  600,
 		contributionScoreFactor:    24000,
