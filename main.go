@@ -53,10 +53,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	token := os.Getenv("GITHUB_TOKEN")
+	if token == "" {
+		disgo.Errorln(style.Failure(style.SymbolCross, "iissing github access token. Please set one in your GITHUB_TOKEN environment variable, with \"repo\" rights."))
+		os.Exit(1)
+	}
+
 	ctx := context{
 		repoOwner:          repoInfo[0],
 		repoName:           repoInfo[1],
-		githubToken:        os.Getenv("GITHUB_TOKEN"),
+		githubToken:        token,
 		cacheDirectoryPath: viper.GetString("cachedir"),
 		details:            viper.GetBool("details"),
 	}
