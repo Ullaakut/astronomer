@@ -76,19 +76,6 @@ func cacheEntryFilename(ctx context, url string) string {
 	return filepath.Join(ctx.cacheDirectoryPath, ctx.repoOwner, ctx.repoName, sanitize.BaseName(newURL))
 }
 
-// clearEntry clears a specified cache entry.
-func clearEntry(ctx context, url string) error {
-	filename := cacheEntryFilename(ctx, url)
-	return os.Remove(filename)
-}
-
-// Clear clears all cache entries for the repository specified in the
-// fetch context.
-func Clear(ctx context) error {
-	filename := filepath.Join(ctx.cacheDirectoryPath, ctx.repoOwner, ctx.repoName)
-	return os.RemoveAll(filename)
-}
-
 // listilePagination generates the pagination to append to the cache file names
 // for stargazer lists.
 func listFilePagination(page int) string {

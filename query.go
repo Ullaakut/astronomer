@@ -186,7 +186,7 @@ func fetchStargazers(ctx context) (cursors []string, totalUsers int, err error) 
 		}
 	}
 
-	cursors = getCursors(stargazers)
+	cursors = getCursors(stargazers, totalUsers)
 
 	return cursors, totalUsers, nil
 }
@@ -194,11 +194,11 @@ func fetchStargazers(ctx context) (cursors []string, totalUsers int, err error) 
 // Return the appropriate cursors to be used by the fetchContributions function
 // according to the value of ${contribPagination}. Also makes sure not to include
 // any page of users containing blacklisted individuals.
-func getCursors(sg []stargazers) []string {
+func getCursors(sg []stargazers, totalUsers int) []string {
 	var (
-		skip       bool
-		totalUsers int
-		cursors    []string
+		skip      bool
+		iteration int
+		cursors   []string
 	)
 
 	for _, stargazers := range sg {
@@ -209,10 +209,17 @@ func getCursors(sg []stargazers) []string {
 				skip = true
 			}
 
+			// If this is the last user of the whole set, even if it's exactly at the
+			// end of the current page, we don't need its cursor, because there is nothing
+			// to get after his profile.
+			if iteration == totalUsers-1 {
+				break
+			}
+
 			// Iterate through list of stargazers, and add a cursor for every
 			// ${contribPagination} users, unless one of the users within the current
 			// page is blacklisted, in which case we skip the whole page.
-			if totalUsers > 0 && totalUsers%contribPagination == 0 {
+			if iteration >= (contribPagination-1) && iteration%contribPagination == contribPagination-1 {
 				if !skip {
 					cursors = append(cursors, stargazers.Meta[currentPageUsers].Cursor)
 				} else {
@@ -220,8 +227,8 @@ func getCursors(sg []stargazers) []string {
 				}
 			}
 
+			iteration++
 			currentPageUsers++
-			totalUsers++
 		}
 	}
 

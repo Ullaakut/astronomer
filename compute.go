@@ -58,7 +58,7 @@ func computeTrustReport(ctx context, users []user) (*trustReport, error) {
 		for _, percentile := range percentiles {
 			value, err := stats.Percentile(trustData[contributionScoreFactor], percentile)
 			if err != nil {
-				return nil, fmt.Errorf("unable to compute score trust %dth pervcentile: %v", percentile, err)
+				return nil, fmt.Errorf("unable to compute score trust %2.fth percentile: %v", percentile, err)
 			}
 
 			scorePercentiles[percentile] = trustFactor{
