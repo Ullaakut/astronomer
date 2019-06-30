@@ -7,14 +7,34 @@ import (
 )
 
 const (
-	usersPerRequest        = 20
-	iso8601Format          = "2006-01-02T15:04:05Z"
-	fetchStargazersRequest = `{"query" : "{
+	// Ask for 100 users per query when listing stargazers.
+	listPagination = 100
+	// Ask for 20 users per query when fetching contribution data.
+	contribPagination = 20
+
+	// ISO8601 time format used by the GitHub API.
+	iso8601Format = "2006-01-02T15:04:05Z"
+
+	// Request to list users. Low cost in terms of rate limiting.
+	fetchUsersRequest = `{"query" : "{
 			rateLimit {
 				limit
-				cost
 				remaining
-				resetAt
+			}
+			repository(owner: \"$repoOwner\", name: \"$repoName\") {
+				stargazers(first: $pagination) {
+					edges {
+						cursor
+					}
+				}
+			}
+		}"}`
+
+	// Request to fetch user contributions. Expensive in terms of rate limiting.
+	// Fetching more than 20 users at a time is pretty much a guaranteed timeout.
+	fetchContributionsRequest = `{"query" : "{
+			rateLimit {
+				remaining
 			}
 			repository(owner: \"$repoOwner\", name: \"$repoName\") {
 				stargazers(first: $pagination) {
