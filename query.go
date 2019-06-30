@@ -248,12 +248,8 @@ func isBlacklisted(user string) bool {
 func setupProgressBar(pages int) *mpb.Bar {
 	p := mpb.New(mpb.WithWidth(64))
 
-	name := "Fetching user contributions:"
 	bar := p.AddBar(int64(pages*contribPagination),
 		mpb.BarStyle("[=>-]"),
-		mpb.PrependDecorators(
-			decor.Name(name, decor.WC{W: len(name) + 1, C: decor.DidentRight}),
-		),
 		mpb.AppendDecorators(
 			decor.Name("ETA: "),
 			decor.AverageETA(decor.ET_STYLE_GO),
