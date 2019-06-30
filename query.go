@@ -64,6 +64,8 @@ func fetchStargazers(ctx context) ([]string, error) {
 
 	defer disgo.EndStep()
 
+	disgo.StartStepf("Pre-fetching all stargazers")
+
 	for {
 		page++
 
@@ -96,8 +98,6 @@ func fetchStargazers(ctx context) ([]string, error) {
 		// If the request was not found in the cache, try to fetch it until it works
 		// or until the limit of 20 attempts is reached.
 		if resp == nil {
-			disgo.StartStepf("Listing stargazers %d to %d", (page-1)*listPagination, (page)*listPagination)
-
 			var attempts int
 			backoff.Retry(func() error {
 				// If we reached 20 attempts, give up.
@@ -159,6 +159,11 @@ func fetchStargazers(ctx context) ([]string, error) {
 			return nil, disgo.FailStepf("unable to write user contribution data to cache: %v", err)
 		}
 
+		if len(response.Repository.Stargazers.Users) < listPagination {
+			disgo.Infoln("Reached end of stargazer list")
+			break
+		}
+
 		// Set the rate limit sleep duration depending on the token's limit.
 		rateLimitSleepDuration = time.Hour / time.Duration(response.RateLimit.Limit)
 
@@ -183,27 +188,30 @@ func getCursors(sg []stargazers) []string {
 		cursors    []string
 	)
 
+	// sg: {[1,2],[3,4],[5,6],[7,8],[9,10]}{[1,2],[3,4],[5]}
+
 	for _, stargazers := range sg {
 		var currentPageUsers int
+
 		for _, user := range stargazers.Users {
 			if isBlacklisted(user.Login) {
 				skip = true
 			}
-		}
 
-		// Iterate through list of stargazers, and add a cursor for every
-		// ${contribPagination} users, unless one of the users within the current
-		// page is blacklisted, in which case we skip the whole page.
-		if totalUsers > 0 && totalUsers%contribPagination == 0 {
-			if !skip {
-				cursors = append(cursors, stargazers.Meta[currentPageUsers].Cursor)
-			} else {
-				skip = false
+			// Iterate through list of stargazers, and add a cursor for every
+			// ${contribPagination} users, unless one of the users within the current
+			// page is blacklisted, in which case we skip the whole page.
+			if totalUsers > 0 && totalUsers%contribPagination == 0 {
+				if !skip {
+					cursors = append(cursors, stargazers.Meta[currentPageUsers].Cursor)
+				} else {
+					skip = false
+				}
 			}
-		}
 
-		currentPageUsers++
-		totalUsers++
+			currentPageUsers++
+			totalUsers++
+		}
 	}
 
 	return cursors
@@ -224,7 +232,6 @@ func isBlacklisted(user string) bool {
 // untilYear is the year until which to scan for contribuitons.
 func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, error) {
 	var (
-		page           int
 		requestBody    string
 		users          []user
 		rateLimitSleep time.Duration
@@ -244,17 +251,17 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 
 	defer disgo.EndStep()
 
-	// Iterate on lists of users.
-	for {
-		page++
+	// Iterate on pages of user contributions, following the cursors generated
+	// in fetchStargazers.
+	for page := 1; page <= len(cursors)+1; page++ {
 
-		// If this isn't the first request, inject the cursor value.
+		// If this isn't the first page, inject the cursor value.
 		paginatedRequestBody := requestBody
-		if page > 0 {
+		if page > 1 {
 			paginatedRequestBody = strings.Replace(
 				paginatedRequestBody,
 				fmt.Sprintf("stargazers(first:%d){", contribPagination),
-				fmt.Sprintf("stargazers(first:%d,after:\\\"%s\\\"){", contribPagination, cursors[page]),
+				fmt.Sprintf("stargazers(first:%d,after:\\\"%s\\\"){", contribPagination, cursors[page-2]),
 				1)
 		}
 
@@ -350,11 +357,6 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 				disgo.Debugln("Rate limit reached, slowing down requests")
 				rateLimitSleep = rateLimitSleepDuration
 			}
-		}
-
-		if page == len(cursors) {
-			disgo.Debugln("Reached end of user list")
-			break
 		}
 
 		disgo.EndStep()

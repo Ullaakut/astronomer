@@ -26,6 +26,9 @@ const (
 					edges {
 						cursor
 					}
+					nodes {
+						login
+					}
 				}
 			}
 		}"}`
