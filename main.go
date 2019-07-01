@@ -62,9 +62,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	if viper.GetUint("stars") < uint(contribPagination) {
+	stars := viper.GetUint("stars")
+	if stars < uint(contribPagination) {
 		disgo.Errorln(style.Failure(style.SymbolCross, " unable to compute less stars than the amount fetched per page. Please set stars to at least ", contribPagination))
 		os.Exit(1)
+	}
+
+	if stars%contribPagination != 0 {
+		stars = stars - stars%contribPagination
+		disgo.Errorln(style.Failure("Rounding amount of stars to get to ", stars, " instead of ", viper.GetUint("stars"), " to match pagination"))
 	}
 
 	ctx := context{
