@@ -15,6 +15,8 @@ func parseArguments() error {
 	viper.SetEnvPrefix("astronomer")
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 
+	pflag.BoolP("fast", "f", true, "Enable fast mode in order to scan random stargazers instead of all of them (slightly less accurate)")
+	pflag.UintP("stars", "s", 1000, "Maxmimum amount of stars to scan (picked randomly), if fast mode is enabled")
 	pflag.BoolP("details", "d", false, "Show more detailed trust factors, such as percentiles")
 	pflag.StringP("cachedir", "c", "./data", "Set the directory in which to store cache data")
 
@@ -64,6 +66,8 @@ func main() {
 		repoName:           repoInfo[1],
 		githubToken:        token,
 		cacheDirectoryPath: viper.GetString("cachedir"),
+		fastMode:           viper.GetBool("fast"),
+		stars:              viper.GetUint("stars"),
 		details:            viper.GetBool("details"),
 	}
 
@@ -88,7 +92,11 @@ func detectFakeStars(ctx context) error {
 
 	// For now, we only fetch contributions until 2013. It will be configurable later on
 	// once the algorithm is more accurate and more data has been fetched.
-	disgo.Infof("Fetching contributions for %d users up to year %d\n", totalUsers, 2013)
+	if ctx.fastMode && totalUsers > ctx.stars {
+		disgo.Infof("Fetching contributions for %d users up to year %d\n", ctx.stars, 2013)
+	} else {
+		disgo.Infof("Fetching contributions for %d users up to year %d\n", totalUsers, 2013)
+	}
 
 	users, err := fetchContributions(ctx, cursors, 2013)
 	if err != nil {

@@ -37,6 +37,7 @@ Trust is computed based on many different factors:
 * The average amount of public opened pull requests
 * The average amount of public code reviews
 * The average weighted contribution score (weighted by making older contributions more trustworthy)
+* Every 5th percentile, from 5 to 95, of the weighted contribution score
 * The average account age, older is more trustworthy
 
 ## How to use it
@@ -65,8 +66,10 @@ The `astronomer` binary will then be available in `$GOPATH/bin/astronomer`.
 ## Arguments and options
 
 * It is required to specify a repository in the form `repositoryOwner/repositoryName`. This argument's position does not matter.
-* **`-d, --debug`**: Show more detailed trust factors, such as percentiles (default: false)
 * **`-c, --cachedir` (string)**: Set the directory in which to store cache data (default: `./data`)
+* **`-f, --fast`**: Enable fast mode in order to scan random stargazers instead of all of them (slightly less accurate) (default: `true`)
+* **`-s, --stars`**: Maxmimum amount of stars to scan (picked randomly), if fast mode is enabled (default: `1000`)
+* **`-d, --debug`**: Show more detailed trust factors, such as percentiles (default: `false`)
 
 ## Upcoming features
 
@@ -97,11 +100,13 @@ Astronomer only attempts to estimate a trust level. The more stargazers there ar
 
 > _Why would fake stars be an issue? The number of stars doesn't really matter._
 
-Repositories with high amounts of stars, especially when they arrive in bursts, are often found in [GitHub trending](https://github.com/trending), they are also emailed to people who subscribed to the [GitHub Explore](https://github.com/explore?since=daily) daily newsletter. This means that an open source project can get actual users to use their software by bringing attention to it using illegitimate bot accounts. Unfortunately, as far as I know, GitHub currently does not attempt to prevent this from happening.
+Repositories with high amounts of stars, especially when they arrive in bursts, are often found in [GitHub trending](https://github.com/trending), they are also emailed to people who subscribed to the [GitHub Explore](https://github.com/explore?since=daily) daily newsletter. This means that an open source project can get actual users to use their software by bringing attention to it using illegitimate bot accounts. Many startups are known for choosing technologies to use based on GitHub stars, since they provide the comforting thought that the project is backed by a strong community. Unfortunately, as far as I know, GitHub currently does not attempt to prevent this from happening.
 
 > _Why is `Astronomer` so slow? It's been scanning a project for hours._
 
-Astronomer needs to make a lot of queries to the GitHub API in order to fetch all of the user data. It typically needs to do one request per page of stargazers per year of contributions, (as of 2019 that's 11 requests per 30 users). The issue is that the GitHub API is rate limited to 5000 requests per hour, so for a scan of 25000 stars for example, about 9000 requests are required, which will result in at least a two hour scan (takes about 6 hours on my machine/network). I plan on contacting GitHub to try to get a token with more flexible rate limiting, since I believe this project is beneficial to their business, but I'm not confident this request will be accepted.
+If you disabled the fast mode, this is normal. It's fetching all contributions from each individual stargazer of this repository. In most cases, running the scan with fast mode enabled (which is the case by default) should never take more than 30mns to scan a repository, unless you have network issues. It will be slightly less accurate, but significantly faster.
+
+With fast mode disabled, Astronomer needs to make a lot of queries to the GitHub API in order to fetch all of the user data. It typically needs to do one request per page of stargazers per year of contributions, (as of 2019 that's 11 requests per 30 users). The issue is that the GitHub API is rate limited to 5000 requests per hour, so for a scan of 25000 stars for example, about 9000 requests are required, which will result in at least a two hour scan (takes about 6 hours on my machine/network). I plan on contacting GitHub to try to get a token with more flexible rate limiting, since I believe this project is beneficial to their business, but I'm not confident this request will be accepted.
 
 > _How can I contribute to this project?_
 
