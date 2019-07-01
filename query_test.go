@@ -60,7 +60,8 @@ func TestGetCursors(t *testing.T) {
 
 	tests := map[string]struct {
 		stargazers []stargazers
-		totalUsers int
+		totalUsers uint
+		starLimit  uint
 
 		expectedCursors []string
 	}{
@@ -69,6 +70,7 @@ func TestGetCursors(t *testing.T) {
 				sg,
 			},
 			totalUsers: 5,
+			starLimit:  100,
 
 			expectedCursors: nil,
 		},
@@ -77,6 +79,7 @@ func TestGetCursors(t *testing.T) {
 				sg, sg, sg, sg,
 			},
 			totalUsers: 20,
+			starLimit:  100,
 
 			expectedCursors: nil,
 		},
@@ -86,6 +89,7 @@ func TestGetCursors(t *testing.T) {
 				sg, sg, sg,
 			},
 			totalUsers: 35,
+			starLimit:  100,
 
 			expectedCursors: []string{"tutu"},
 		},
@@ -97,8 +101,21 @@ func TestGetCursors(t *testing.T) {
 				sg, sg, sg, sg, sg, sg, sg, sg,
 			},
 			totalUsers: 160,
+			starLimit:  200,
 
 			expectedCursors: []string{"tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu"},
+		},
+		"star limit should return less cursors": {
+			stargazers: []stargazers{
+				sg, sg, sg, sg, sg, sg, sg, sg,
+				sg, sg, sg, sg, sg, sg, sg, sg,
+				sg, sg, sg, sg, sg, sg, sg, sg,
+				sg, sg, sg, sg, sg, sg, sg, sg,
+			},
+			totalUsers: 160,
+			starLimit:  100,
+
+			expectedCursors: []string{"tutu", "tutu", "tutu", "tutu"},
 		},
 		"blacklisted stargazers should dcause page skips": {
 			stargazers: []stargazers{
@@ -108,6 +125,7 @@ func TestGetCursors(t *testing.T) {
 				sg, sg, sg, sg, sg, sg, sg, sg,
 			},
 			totalUsers: 160,
+			starLimit:  200,
 
 			expectedCursors: []string{"tutu", "tutu", "tutu", "tutu", "tutu", "tutu"},
 		},
@@ -115,7 +133,12 @@ func TestGetCursors(t *testing.T) {
 
 	for description, test := range tests {
 		t.Run(description, func(t *testing.T) {
-			cursors := getCursors(test.stargazers, test.totalUsers)
+			ctx := context{
+				fastMode: true,
+				stars:    test.starLimit,
+			}
+
+			cursors := getCursors(ctx, test.stargazers, test.totalUsers)
 
 			assert.Equal(t, test.expectedCursors, cursors)
 		})
