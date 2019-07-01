@@ -78,12 +78,20 @@ func cacheEntryFilename(ctx context, url string) string {
 
 // listilePagination generates the pagination to append to the cache file names
 // for stargazer lists.
-func listFilePagination(page int) string {
-	return fmt.Sprintf("-list-%d", page)
+func listFilePagination(cursor string) string {
+	if cursor == "" {
+		return fmt.Sprintf("-list-firstpage")
+	}
+
+	return fmt.Sprintf("-list-%s", cursor)
 }
 
 // contribFilePagination generates the pagination to append to the cache file names
 // for user contribution data.
-func contribFilePagination(page, year int) string {
-	return fmt.Sprintf("-%d-%d", page, year)
+func contribFilePagination(cursor string, year int) string {
+	if cursor == "" {
+		return fmt.Sprintf("-firstpage-%d", year)
+	}
+
+	return fmt.Sprintf("-%s-%d", cursor, year)
 }

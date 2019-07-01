@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -37,6 +38,16 @@ type context struct {
 	githubToken        string
 	cacheDirectoryPath string
 
+	// If fastMode is set to true and that the repository
+	// has more than ${fastModeStars} stargazers, pick
+	// ${fastModeStars}/${contribPagination} number of cursors
+	// randomly from all cursors.
+	fastMode bool
+
+	// Amount of stars to scan in fastMode. Will be used only if
+	// fastMode is enabled.
+	stars uint
+
 	// If details is set to true, astronomer will print
 	// additional factors such as percentiles.
 	details bool
@@ -58,7 +69,7 @@ func buildRequestBody(ctx context, baseRequest string, pagination int) string {
 
 // fetchStargazers fetches the list of cursors to iterate upon to
 // fetch stargazer contributions.
-func fetchStargazers(ctx context) (cursors []string, totalUsers int, err error) {
+func fetchStargazers(ctx context) (cursors []string, totalUsers uint, err error) {
 	var (
 		stargazers     []stargazers
 		lastCursor     string
@@ -95,7 +106,7 @@ func fetchStargazers(ctx context) (cursors []string, totalUsers int, err error) 
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", ctx.githubToken))
 		req.Header.Set("User-Agent", "Astronomer")
 
-		resp, err := getCache(ctx, req, listFilePagination(page))
+		resp, err := getCache(ctx, req, listFilePagination(lastCursor))
 		if err != nil {
 			return nil, 0, disgo.FailStepf("unable to get cached file: %v", err)
 		}
@@ -154,19 +165,19 @@ func fetchStargazers(ctx context) (cursors []string, totalUsers int, err error) 
 
 		stargazers = append(stargazers, response.Repository.Stargazers)
 
-		lastCursor = response.Repository.Stargazers.Meta.cursor()
-
 		if len(response.Errors) != 0 || response.ErrorMessage != "" {
 			disgo.Errorln("Errors:", response.ErrorMessage, response.Errors)
 			return nil, 0, disgo.FailStepf("failed to fetch user contributions. last body recieved: %s", responseBody)
 		}
 
-		err = putCache(ctx, req, listFilePagination(page), responseBody)
+		err = putCache(ctx, req, listFilePagination(lastCursor), responseBody)
 		if err != nil {
 			return nil, 0, disgo.FailStepf("unable to write user contribution data to cache: %v", err)
 		}
 
-		totalUsers += len(response.Repository.Stargazers.Users)
+		lastCursor = response.Repository.Stargazers.Meta.cursor()
+
+		totalUsers += uint(len(response.Repository.Stargazers.Users))
 
 		// TODO: This will break if the repository has a number of users that
 		// is a factor of ${listPagination}. In that case, it will loop forever.
@@ -186,7 +197,7 @@ func fetchStargazers(ctx context) (cursors []string, totalUsers int, err error) 
 		}
 	}
 
-	cursors = getCursors(stargazers, totalUsers)
+	cursors = getCursors(ctx, stargazers, totalUsers)
 
 	return cursors, totalUsers, nil
 }
@@ -194,10 +205,10 @@ func fetchStargazers(ctx context) (cursors []string, totalUsers int, err error) 
 // Return the appropriate cursors to be used by the fetchContributions function
 // according to the value of ${contribPagination}. Also makes sure not to include
 // any page of users containing blacklisted individuals.
-func getCursors(sg []stargazers, totalUsers int) []string {
+func getCursors(ctx context, sg []stargazers, totalUsers uint) []string {
 	var (
 		skip      bool
-		iteration int
+		iteration uint
 		cursors   []string
 	)
 
@@ -232,7 +243,51 @@ func getCursors(sg []stargazers, totalUsers int) []string {
 		}
 	}
 
+	if ctx.fastMode && totalUsers > ctx.stars {
+		disgo.Infof("Fast mode enabled, scanning %d random stargazers out of %d\n", ctx.stars, totalUsers)
+		return pickRandomStrings(cursors, ctx.stars/uint(contribPagination))
+	}
+
 	return cursors
+}
+
+// Pick random strings picks ${amount} random strings from the
+// given slice of strings.
+func pickRandomStrings(s []string, amount uint) []string {
+	// Make the random non-deterministic.
+	seed := rand.NewSource(time.Now().UnixNano())
+	random := rand.New(seed)
+
+	var indexes []int
+	for i := uint(1); i < amount; i++ {
+		// Generate an index.
+		newIndex := random.Intn(len(s) - 1)
+
+		// Check if it has already been selected.
+		var found bool
+		for _, index := range indexes {
+			if newIndex == index {
+				found = true
+			}
+		}
+
+		// Regenerate another one if this index has already been selected.
+		if found {
+			i--
+			continue
+		}
+
+		indexes = append(indexes, newIndex)
+	}
+
+	var strings []string
+	for _, index := range indexes {
+		strings = append(strings, s[index])
+	}
+
+	// disgo.Infoln("Chosen cursors:", strings)
+
+	return strings
 }
 
 func isBlacklisted(user string) bool {
@@ -262,6 +317,14 @@ func setupProgressBar(pages int) *mpb.Bar {
 	return bar
 }
 
+func getCursor(cursors []string, page int) string {
+	if page > 1 {
+		return cursors[page-2]
+	}
+
+	return "firstpage"
+}
+
 // fetchContributions fetches the contribution data of a list of stargazers.
 // ctx contains the scanned context of the astronomer command.
 // untilYear is the year until which to scan for contribuitons.
@@ -279,13 +342,15 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 	// Iterate on pages of user contributions, following the cursors generated
 	// in fetchStargazers.
 	for page := 1; page <= len(cursors)+1; page++ {
+		currentCursor := getCursor(cursors, page)
+
 		// If this isn't the first page, inject the cursor value.
 		paginatedRequestBody := requestBody
 		if page > 1 {
 			paginatedRequestBody = strings.Replace(
 				paginatedRequestBody,
 				fmt.Sprintf("stargazers(first:%d){", contribPagination),
-				fmt.Sprintf("stargazers(first:%d,after:\\\"%s\\\"){", contribPagination, cursors[page-2]),
+				fmt.Sprintf("stargazers(first:%d,after:\\\"%s\\\"){", contribPagination, currentCursor),
 				1)
 		}
 
@@ -314,7 +379,7 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 			req.Header.Set("User-Agent", "Astronomer")
 
 			// Try to get a cached response to this request.
-			resp, err := getCache(ctx, req, contribFilePagination(page, currentYear-i))
+			resp, err := getCache(ctx, req, contribFilePagination(currentCursor, currentYear-i))
 			if err != nil {
 				return nil, fmt.Errorf("unable to get cached file: %v", err)
 			}
@@ -388,7 +453,7 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 			// If file was fetched, write it in the cache. If we already got it from the cache,
 			// no need to rewrite it.
 			if !cachedFileFound {
-				err = putCache(ctx, req, contribFilePagination(page, currentYear-i), responseBody)
+				err = putCache(ctx, req, contribFilePagination(currentCursor, currentYear-i), responseBody)
 				if err != nil {
 					return users, fmt.Errorf("unable to write user contribution data to cache: %v", err)
 				}
