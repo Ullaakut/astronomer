@@ -39,14 +39,20 @@ type context struct {
 	cacheDirectoryPath string
 
 	// If fastMode is set to true and that the repository
-	// has more than ${fastModeStars} stargazers, pick
-	// ${fastModeStars}/${contribPagination} number of cursors
+	// has more than ${stars} stargazers, pick
+	// ${stars}/${contribPagination} number of cursors
 	// randomly from all cursors.
 	fastMode bool
 
 	// Amount of stars to scan in fastMode. Will be used only if
 	// fastMode is enabled.
 	stars uint
+
+	// When set to true, overrides the fast mode and simply scans the
+	// first ${stars} stargazers on this repository. Useful to detect
+	// botted/bought stars that were used to initially boost a repo's
+	// popularity.
+	scanFirstStars bool
 
 	// If details is set to true, astronomer will print
 	// additional factors such as percentiles.
@@ -241,6 +247,12 @@ func getCursors(ctx context, sg []stargazers, totalUsers uint) []string {
 			iteration++
 			currentPageUsers++
 		}
+	}
+
+	if ctx.scanFirstStars {
+		disgo.Infof("Scanning first %d stars out of %d\n", ctx.stars, totalUsers)
+		amount := int(ctx.stars) / contribPagination
+		return cursors[len(cursors)-amount+1:]
 	}
 
 	if ctx.fastMode && totalUsers > ctx.stars {
