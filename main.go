@@ -16,7 +16,8 @@ func parseArguments() error {
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 
 	pflag.BoolP("fast", "f", true, "Enable fast mode in order to scan random stargazers instead of all of them (slightly less accurate)")
-	pflag.UintP("stars", "s", 1000, "Maxmimum amount of stars to scan (picked randomly), if fast mode is enabled")
+	pflag.UintP("stars", "s", 1000, "Maxmimum amount of stars to scan, if fast mode is enabled")
+	pflag.BoolP("scanfirststars", "", false, "Scan the first stars of the repository (overrides fast mode). Set amount of stars with --stars options")
 	pflag.BoolP("details", "d", false, "Show more detailed trust factors, such as percentiles")
 	pflag.StringP("cachedir", "c", "./data", "Set the directory in which to store cache data")
 
@@ -51,13 +52,18 @@ func main() {
 
 	repoInfo := strings.Split(repository, "/")
 	if len(repoInfo) != 2 {
-		disgo.Errorln(style.Failure(style.SymbolCross, "invalid repository %q: should be of the form \"repoOwner/repoName\"", repository))
+		disgo.Errorln(style.Failure(style.SymbolCross, " invalid repository %q: should be of the form \"repoOwner/repoName\"", repository))
 		os.Exit(1)
 	}
 
 	token := os.Getenv("GITHUB_TOKEN")
 	if token == "" {
-		disgo.Errorln(style.Failure(style.SymbolCross, "iissing github access token. Please set one in your GITHUB_TOKEN environment variable, with \"repo\" rights."))
+		disgo.Errorln(style.Failure(style.SymbolCross, " missing github access token. Please set one in your GITHUB_TOKEN environment variable, with \"repo\" rights."))
+		os.Exit(1)
+	}
+
+	if viper.GetUint("stars") < uint(contribPagination) {
+		disgo.Errorln(style.Failure(style.SymbolCross, " unable to compute less stars than the amount fetched per page. Please set stars to at least ", contribPagination))
 		os.Exit(1)
 	}
 
@@ -67,6 +73,7 @@ func main() {
 		githubToken:        token,
 		cacheDirectoryPath: viper.GetString("cachedir"),
 		fastMode:           viper.GetBool("fast"),
+		scanFirstStars:     viper.GetBool("scanfirststars"),
 		stars:              viper.GetUint("stars"),
 		details:            viper.GetBool("details"),
 	}

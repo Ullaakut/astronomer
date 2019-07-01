@@ -67,9 +67,31 @@ The `astronomer` binary will then be available in `$GOPATH/bin/astronomer`.
 
 * It is required to specify a repository in the form `repositoryOwner/repositoryName`. This argument's position does not matter.
 * **`-c, --cachedir` (string)**: Set the directory in which to store cache data (default: `./data`)
-* **`-f, --fast`**: Enable fast mode in order to scan random stargazers instead of all of them (slightly less accurate) (default: `true`)
 * **`-s, --stars`**: Maxmimum amount of stars to scan (picked randomly), if fast mode is enabled (default: `1000`)
 * **`-d, --debug`**: Show more detailed trust factors, such as percentiles (default: `false`)
+* **`--fast`**: Enable fast mode in order to scan random stargazers instead of all of them (slightly less accurate) (default: `true`)
+* **`--scanFirstStars`**: Scan the first stars of the repository (overrides fast mode). Set amount of stars with --stars options (default: `false`)
+
+## Example use cases
+
+> _Scanning a repository with detailed statistics_
+
+**With the binary**: `astronomer --details ${repoOwner}/${repoName}`
+**With the docker image**: `docker run -e GITHUB_TOKEN="$GITHUB_TOKEN" -v "/tmp:/data" -t ullaakut/astronomer --details ${repoOwner}/${repoName}`
+
+Note that you can also use the `-d` flag instead of `--details`.
+
+> _Run a full scan of a repository with detailed statistics_
+
+**With the binary**: `astronomer --details --fast=false ${repoOwner}/${repoName}`
+**With the docker image**: `docker run -e GITHUB_TOKEN="$GITHUB_TOKEN" -v "/tmp:/data" -t ullaakut/astronomer --details --fast=false ${repoOwner}/${repoName}`
+
+Make sure to mount a directory that is safe from deletion (not `/tmp` like in this example) as the scan might take hours or days, and if it is stopped while fetching data, the cache folder will allow you to recover to your fetching state in a few seconds. If the cache is lost however, you will need to restart the scan.
+
+> _Scanning the first 500 stars of a repository, with detailed statistics_
+
+**With the binary**: `astronomer --scanFirstStars --stars="500" --details ${repoOwner}/${repoName}`
+**With the docker image**: `docker run -e GITHUB_TOKEN="$GITHUB_TOKEN" -v "/tmp:/data" -t ullaakut/astronomer --scanFirstStars --stars="500" --details ${repoOwner}/${repoName}`
 
 ## Upcoming features
 

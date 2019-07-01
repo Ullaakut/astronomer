@@ -53,15 +53,21 @@ func TestGetCursors(t *testing.T) {
 		Meta:  metaData{{Cursor: "titi"}, {Cursor: "toto"}, {Cursor: "tete"}, {Cursor: "tata"}, {Cursor: "tutu"}},
 	}
 
+	sg2 := stargazers{
+		Users: []user{{Login: "titi"}, {Login: "toto"}, {Login: "tete"}, {Login: "tata"}, {Login: "tyty"}},
+		Meta:  metaData{{Cursor: "titi"}, {Cursor: "toto"}, {Cursor: "tete"}, {Cursor: "tata"}, {Cursor: "tyty"}},
+	}
+
 	blacklistedStargazers := stargazers{
 		Users: []user{{Login: "jstrachan"}, {Login: "toto"}, {Login: "tete"}, {Login: "tata"}, {Login: "tutu"}},
 		Meta:  metaData{{Cursor: "jstrachan"}, {Cursor: "toto"}, {Cursor: "tete"}, {Cursor: "tata"}, {Cursor: "tutu"}},
 	}
 
 	tests := map[string]struct {
-		stargazers []stargazers
-		totalUsers uint
-		starLimit  uint
+		stargazers     []stargazers
+		totalUsers     uint
+		starLimit      uint
+		scanFirstStars bool
 
 		expectedCursors []string
 	}{
@@ -117,6 +123,21 @@ func TestGetCursors(t *testing.T) {
 
 			expectedCursors: []string{"tutu", "tutu", "tutu", "tutu"},
 		},
+		"scan first stars should return the first stars": {
+			// Last page does not need a cursor
+			// Four previous pages do.
+			stargazers: []stargazers{
+				sg, sg, sg, sg, sg, sg, sg, sg,
+				sg, sg, sg, sg, sg, sg, sg, sg2,
+				sg, sg, sg, sg2, sg, sg, sg, sg2,
+				sg, sg, sg, sg2, sg, sg, sg, sg,
+			},
+			totalUsers:     160,
+			starLimit:      100,
+			scanFirstStars: true,
+
+			expectedCursors: []string{"tyty", "tyty", "tyty", "tyty"},
+		},
 		"blacklisted stargazers should dcause page skips": {
 			stargazers: []stargazers{
 				sg, sg, sg, sg, sg, sg, blacklistedStargazers, sg,
@@ -134,8 +155,9 @@ func TestGetCursors(t *testing.T) {
 	for description, test := range tests {
 		t.Run(description, func(t *testing.T) {
 			ctx := context{
-				fastMode: true,
-				stars:    test.starLimit,
+				fastMode:       true,
+				stars:          test.starLimit,
+				scanFirstStars: test.scanFirstStars,
 			}
 
 			cursors := getCursors(ctx, test.stargazers, test.totalUsers)
