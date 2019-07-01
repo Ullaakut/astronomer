@@ -80,7 +80,7 @@ func main() {
 		cacheDirectoryPath: viper.GetString("cachedir"),
 		fastMode:           viper.GetBool("fast"),
 		scanFirstStars:     viper.GetBool("scanfirststars"),
-		stars:              viper.GetUint("stars"),
+		stars:              stars,
 		details:            viper.GetBool("details"),
 	}
 

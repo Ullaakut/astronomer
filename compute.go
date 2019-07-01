@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/montanaflynn/stats"
+	"github.com/ullaakut/disgo"
 )
 
 type trustFactor struct {
@@ -29,6 +30,10 @@ func computeTrustReport(ctx context, users []user) (*trustReport, error) {
 	trustData := make(map[factorName][]float64)
 	now := time.Now().Year()
 
+	// Sleep a tiny bit to ensure that the progress bar is updated.
+	time.Sleep(10 * time.Millisecond)
+
+	disgo.StartStepf("Computing trust report for %d users", len(users))
 	for idx := range users {
 		var contributionScore float64
 		for year, contributions := range users[idx].yearlyContributions {
@@ -80,7 +85,7 @@ func buildReport(trustData map[factorName][]float64, scorePercentiles map[float6
 	for factor, data := range trustData {
 		score, err := stats.Mean(data)
 		if err != nil {
-			return nil, fmt.Errorf("unable to compute score for factor %q: %v", factor, err)
+			return nil, disgo.FailStepf("unable to compute score for factor %q: %v", factor, err)
 		}
 
 		trustPercent := computeTrustFromScore(score, factorReferences[factor])
@@ -97,14 +102,22 @@ func buildReport(trustData map[factorName][]float64, scorePercentiles map[float6
 		}
 	}
 
+	// Take percentiles into consideration, if they were
+	// computed.
+	for _, percentileTrust := range scorePercentiles {
+		allTrust = append(allTrust, percentileTrust.trustPercent)
+	}
+
 	trust, err := stats.Mean(allTrust)
 	if err != nil {
-		return nil, fmt.Errorf("unable to compute overall trust: %v", err)
+		return nil, disgo.FailStepf("unable to compute overall trust: %v", err)
 	}
 
 	report.factors[overallTrust] = trustFactor{
 		trustPercent: trust,
 	}
+
+	disgo.EndStep()
 
 	return report, nil
 }
