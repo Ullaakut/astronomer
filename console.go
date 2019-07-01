@@ -83,7 +83,7 @@ func printTrustFactor(trustFactorName string, trustFactor trustFactor) {
 	format := tabulateFormat(trustFactorsFormat, trustFactorName, firstColumnLength)
 	format = tabulateFormat(format, fmt.Sprintf("%1.f", trustFactor.value), secondColumnLength)
 
-	if trustFactor.trustPercent < 0.25 {
+	if trustFactor.trustPercent < 0.5 {
 		disgo.Infof(format, trustFactorName, style.Failure(fmt.Sprintf("%1.f", trustFactor.value)), style.Failure(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	} else if trustFactor.trustPercent < 0.75 {
 		disgo.Infof(format, trustFactorName, style.Important(fmt.Sprintf("%1.f", trustFactor.value)), style.Important(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
@@ -100,7 +100,7 @@ func printPercentile(percentile float64, trustFactor trustFactor) {
 	format := tabulateFormat(trustFactorsFormat, trustFactorName, firstColumnLength)
 	format = tabulateFormat(format, fmt.Sprintf("%1.f", trustFactor.value), secondColumnLength)
 
-	if trustFactor.trustPercent < 0.25 {
+	if trustFactor.trustPercent < 0.5 {
 		disgo.Infof(format, trustFactorName, style.Failure(fmt.Sprintf("%1.f", trustFactor.value)), style.Failure(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	} else if trustFactor.trustPercent < 0.75 {
 		disgo.Infof(format, trustFactorName, style.Important(fmt.Sprintf("%1.f", trustFactor.value)), style.Important(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
@@ -115,7 +115,7 @@ func printResult(trustFactorName string, trustFactor trustFactor) {
 	format := tabulateFormat(overallTrustFormat, trustFactorName, firstColumnLength+secondColumnLength+1)
 	underline := generateUnderline(firstColumnLength + secondColumnLength + 8)
 
-	if trustFactor.trustPercent < 0.25 {
+	if trustFactor.trustPercent < 0.5 {
 		disgo.Infof(format, underline, trustFactorName, style.Failure(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	} else if trustFactor.trustPercent < 0.75 {
 		disgo.Infof(format, underline, trustFactorName, style.Important(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))

@@ -252,7 +252,8 @@ func getCursors(ctx context, sg []stargazers, totalUsers uint) []string {
 	if ctx.scanFirstStars {
 		disgo.Infof("Scanning first %d stars out of %d\n", ctx.stars, totalUsers)
 		amount := int(ctx.stars) / contribPagination
-		return cursors[len(cursors)-amount+1:]
+
+		return cursors[len(cursors)-amount-1 : len(cursors)-1]
 	}
 
 	if ctx.fastMode && totalUsers > ctx.stars {
@@ -297,8 +298,6 @@ func pickRandomStrings(s []string, amount uint) []string {
 		strings = append(strings, s[index])
 	}
 
-	// disgo.Infoln("Chosen cursors:", strings)
-
 	return strings
 }
 
@@ -329,7 +328,16 @@ func setupProgressBar(pages int) *mpb.Bar {
 	return bar
 }
 
-func getCursor(cursors []string, page int) string {
+func getCursor(cursors []string, page int, scanFirstStars bool) string {
+	// If scanning in the reverse order, we don't have any page without
+	// a cursor, so we don't start using the cursor from page 2 but
+	// the first one directly.
+	if scanFirstStars && page > 0 {
+		return cursors[page-1]
+	}
+
+	// If not scanning in the reverse order, the first page does not
+	// need a cursor since we can simply request the first X users.
 	if page > 1 {
 		return cursors[page-2]
 	}
@@ -351,14 +359,22 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 
 	progressBar := setupProgressBar(len(cursors) + 1)
 
+	totalPages := len(cursors)
+	// If we don't scan in reverse order (first stars first), we
+	// have fetch each page pointed at by the cursors, plus the first
+	// page which doesn't require a cursor.
+	if !ctx.scanFirstStars {
+		totalPages++
+	}
+
 	// Iterate on pages of user contributions, following the cursors generated
 	// in fetchStargazers.
-	for page := 1; page <= len(cursors)+1; page++ {
-		currentCursor := getCursor(cursors, page)
+	for page := 1; page <= totalPages; page++ {
+		currentCursor := getCursor(cursors, page, ctx.scanFirstStars)
 
 		// If this isn't the first page, inject the cursor value.
 		paginatedRequestBody := requestBody
-		if page > 1 {
+		if currentCursor != "firstpage" {
 			paginatedRequestBody = strings.Replace(
 				paginatedRequestBody,
 				fmt.Sprintf("stargazers(first:%d){", contribPagination),

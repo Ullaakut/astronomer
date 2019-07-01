@@ -124,19 +124,17 @@ func TestGetCursors(t *testing.T) {
 			expectedCursors: []string{"tutu", "tutu", "tutu", "tutu"},
 		},
 		"scan first stars should return the first stars": {
-			// Last page does not need a cursor
-			// Four previous pages do.
 			stargazers: []stargazers{
-				sg, sg, sg, sg, sg, sg, sg, sg,
 				sg, sg, sg, sg, sg, sg, sg, sg2,
 				sg, sg, sg, sg2, sg, sg, sg, sg2,
-				sg, sg, sg, sg2, sg, sg, sg, sg,
+				sg, sg, sg, sg2, sg, sg, sg, sg2,
+				sg, sg, sg, sg, sg, sg, sg, sg,
 			},
 			totalUsers:     160,
 			starLimit:      100,
 			scanFirstStars: true,
 
-			expectedCursors: []string{"tyty", "tyty", "tyty", "tyty"},
+			expectedCursors: []string{"tyty", "tyty", "tyty", "tyty", "tyty"},
 		},
 		"blacklisted stargazers should dcause page skips": {
 			stargazers: []stargazers{
