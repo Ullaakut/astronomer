@@ -374,7 +374,7 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 			}
 
 			if response == nil {
-				return nil, fmt.Errorf("failed to fetch user contributions. last body recieved: %s", responseBody)
+				return nil, fmt.Errorf("failed to fetch user contributions. failed at cursor %s", cursors[page-2])
 			}
 
 			// Update list of users with users from reponse.
@@ -382,7 +382,7 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 
 			if len(response.Errors) != 0 || response.ErrorMessage != "" {
 				disgo.Errorln("Errors:", response.ErrorMessage, response.Errors)
-				return nil, fmt.Errorf("failed to fetch user contributions. last body recieved: %s", responseBody)
+				return nil, fmt.Errorf("failed to fetch user contributions. failed at cursor %s", cursors[page-2])
 			}
 
 			// If file was fetched, write it in the cache. If we already got it from the cache,
