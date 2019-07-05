@@ -30,33 +30,10 @@ func TestBuildReport(t *testing.T) {
 		contributionScoreFactor:    []float64{0, 2 * factorReferences[contributionScoreFactor], 4 * factorReferences[contributionScoreFactor]},
 	}
 
-	percentiles := map[float64]trustFactor{
-		5:  trustFactor{value: percentileReferences[5], trustPercent: 0.75},
-		10: trustFactor{value: percentileReferences[10], trustPercent: 0.75},
-		15: trustFactor{value: percentileReferences[15], trustPercent: 0.75},
-		20: trustFactor{value: percentileReferences[20], trustPercent: 0.75},
-		25: trustFactor{value: percentileReferences[25], trustPercent: 0.75},
-		30: trustFactor{value: percentileReferences[30], trustPercent: 0.75},
-		35: trustFactor{value: percentileReferences[35], trustPercent: 0.75},
-		40: trustFactor{value: percentileReferences[40], trustPercent: 0.75},
-		45: trustFactor{value: percentileReferences[45], trustPercent: 0.75},
-		50: trustFactor{value: percentileReferences[50], trustPercent: 0.75},
-		55: trustFactor{value: percentileReferences[55], trustPercent: 0.75},
-		60: trustFactor{value: percentileReferences[60], trustPercent: 0.75},
-		65: trustFactor{value: percentileReferences[65], trustPercent: 0.75},
-		70: trustFactor{value: percentileReferences[70], trustPercent: 0.75},
-		75: trustFactor{value: percentileReferences[75], trustPercent: 0.75},
-		80: trustFactor{value: percentileReferences[80], trustPercent: 0.75},
-		85: trustFactor{value: percentileReferences[85], trustPercent: 0.75},
-		90: trustFactor{value: percentileReferences[90], trustPercent: 0.75},
-		95: trustFactor{value: percentileReferences[95], trustPercent: 0.75},
-	}
-
-	report, err := buildReport(trustData, percentiles)
+	report, err := buildReport(trustData)
 	require.NoError(t, err)
 	require.NotNil(t, report)
 
-	assert.Equal(t, percentiles, report.percentiles)
 	for factor, expectedTrust := range expectedFactors {
 		assert.Equal(t, expectedTrust, report.factors[factor], "unexpected value for factor %q", factor)
 	}

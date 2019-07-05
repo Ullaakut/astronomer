@@ -15,10 +15,9 @@ func parseArguments() error {
 	viper.SetEnvPrefix("astronomer")
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 
-	pflag.BoolP("fast", "f", true, "Enable fast mode in order to scan random stargazers instead of all of them (slightly less accurate)")
+	pflag.BoolP("verbose", "", true, "Show extra logs (including comparative reports)")
+	pflag.BoolP("all", "a", false, "Force astronomer to scall every stargazer of the repository (overrides --stars)")
 	pflag.UintP("stars", "s", 1000, "Maxmimum amount of stars to scan, if fast mode is enabled")
-	pflag.BoolP("scanfirststars", "", false, "Scan the first stars of the repository (overrides fast mode). Set amount of stars with --stars options")
-	pflag.BoolP("details", "d", false, "Show more detailed trust factors, such as percentiles")
 	pflag.StringP("cachedir", "c", "./data", "Set the directory in which to store cache data")
 
 	viper.AutomaticEnv()
@@ -40,7 +39,7 @@ func parseArguments() error {
 }
 
 func main() {
-	disgo.SetTerminalOptions(disgo.WithColors(true), disgo.WithDebug(true))
+	disgo.SetTerminalOptions(disgo.WithColors(true), disgo.WithDebug(viper.GetBool("debug")))
 
 	err := parseArguments()
 	if err != nil {
@@ -50,6 +49,7 @@ func main() {
 
 	repository := pflag.Arg(0)
 
+	// Split repository into repo owner & repo name.
 	repoInfo := strings.Split(repository, "/")
 	if len(repoInfo) != 2 {
 		disgo.Errorln(style.Failure(style.SymbolCross, " invalid repository %q: should be of the form \"repoOwner/repoName\"", repository))
@@ -68,6 +68,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Round amount of stars to get according to pagination.
 	if stars%contribPagination != 0 {
 		stars = stars - stars%contribPagination
 		disgo.Errorln(style.Failure("Rounding amount of stars to get to ", stars, " instead of ", viper.GetUint("stars"), " to match pagination"))
@@ -77,11 +78,9 @@ func main() {
 		repoOwner:          repoInfo[0],
 		repoName:           repoInfo[1],
 		githubToken:        token,
-		cacheDirectoryPath: viper.GetString("cachedir"),
-		fastMode:           viper.GetBool("fast"),
-		scanFirstStars:     viper.GetBool("scanfirststars"),
 		stars:              stars,
-		details:            viper.GetBool("details"),
+		cacheDirectoryPath: viper.GetString("cachedir"),
+		scanAll:            viper.GetBool("all"),
 	}
 
 	if err := detectFakeStars(ctx); err != nil {
@@ -99,13 +98,13 @@ func detectFakeStars(ctx context) error {
 		return fmt.Errorf("failed to query stargazer data: %s", err)
 	}
 
-	if totalUsers < 300 {
+	if totalUsers < 1000 {
 		disgo.Infoln(style.Important("This repository appears to have a low amount of stargazers. Trust calculations might not be accurate."))
 	}
 
 	// For now, we only fetch contributions until 2013. It will be configurable later on
 	// once the algorithm is more accurate and more data has been fetched.
-	if ctx.fastMode && totalUsers > ctx.stars {
+	if !ctx.scanAll && totalUsers > ctx.stars {
 		disgo.Infof("Fetching contributions for %d users up to year %d\n", ctx.stars, 2013)
 	} else {
 		disgo.Infof("Fetching contributions for %d users up to year %d\n", totalUsers, 2013)
@@ -122,7 +121,7 @@ func detectFakeStars(ctx context) error {
 		return fmt.Errorf("unable to compute trust report: %v", err)
 	}
 
-	renderReport(ctx.details, report)
+	renderReport(report)
 
 	disgo.Infof("%s Analysis successful. %d users computed.\n", style.Success(style.SymbolCheck), len(users))
 

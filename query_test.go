@@ -53,10 +53,10 @@ func TestGetCursors(t *testing.T) {
 		Meta:  metaData{{Cursor: "titi"}, {Cursor: "toto"}, {Cursor: "tete"}, {Cursor: "tata"}, {Cursor: "tutu"}},
 	}
 
-	sg2 := stargazers{
-		Users: []user{{Login: "titi"}, {Login: "toto"}, {Login: "tete"}, {Login: "tata"}, {Login: "tyty"}},
-		Meta:  metaData{{Cursor: "titi"}, {Cursor: "toto"}, {Cursor: "tete"}, {Cursor: "tata"}, {Cursor: "tyty"}},
-	}
+	// sg2 := stargazers{
+	// 	Users: []user{{Login: "titi"}, {Login: "toto"}, {Login: "tete"}, {Login: "tata"}, {Login: "tyty"}},
+	// 	Meta:  metaData{{Cursor: "titi"}, {Cursor: "toto"}, {Cursor: "tete"}, {Cursor: "tata"}, {Cursor: "tyty"}},
+	// }
 
 	blacklistedStargazers := stargazers{
 		Users: []user{{Login: "jstrachan"}, {Login: "toto"}, {Login: "tete"}, {Login: "tata"}, {Login: "tutu"}},
@@ -64,10 +64,10 @@ func TestGetCursors(t *testing.T) {
 	}
 
 	tests := map[string]struct {
-		stargazers     []stargazers
-		totalUsers     uint
-		starLimit      uint
-		scanFirstStars bool
+		stargazers []stargazers
+		totalUsers uint
+		starLimit  uint
+		scanAll    bool
 
 		expectedCursors []string
 	}{
@@ -111,30 +111,23 @@ func TestGetCursors(t *testing.T) {
 
 			expectedCursors: []string{"tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu"},
 		},
-		"star limit should return less cursors": {
+		"scan all stars should return all stars": {
 			stargazers: []stargazers{
 				sg, sg, sg, sg, sg, sg, sg, sg,
 				sg, sg, sg, sg, sg, sg, sg, sg,
 				sg, sg, sg, sg, sg, sg, sg, sg,
 				sg, sg, sg, sg, sg, sg, sg, sg,
-			},
-			totalUsers: 160,
-			starLimit:  100,
-
-			expectedCursors: []string{"tutu", "tutu", "tutu", "tutu"},
-		},
-		"scan first stars should return the first stars": {
-			stargazers: []stargazers{
-				sg, sg, sg, sg, sg, sg, sg, sg2,
-				sg, sg, sg, sg2, sg, sg, sg, sg2,
-				sg, sg, sg, sg2, sg, sg, sg, sg2,
+				sg, sg, sg, sg, sg, sg, sg, sg,
+				sg, sg, sg, sg, sg, sg, sg, sg,
+				sg, sg, sg, sg, sg, sg, sg, sg,
+				sg, sg, sg, sg, sg, sg, sg, sg,
+				sg, sg, sg, sg, sg, sg, sg, sg,
 				sg, sg, sg, sg, sg, sg, sg, sg,
 			},
-			totalUsers:     160,
-			starLimit:      100,
-			scanFirstStars: true,
+			totalUsers: 400,
+			scanAll:    true,
 
-			expectedCursors: []string{"tyty", "tyty", "tyty", "tyty", "tyty"},
+			expectedCursors: []string{"tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu"},
 		},
 		"blacklisted stargazers should dcause page skips": {
 			stargazers: []stargazers{
@@ -153,9 +146,8 @@ func TestGetCursors(t *testing.T) {
 	for description, test := range tests {
 		t.Run(description, func(t *testing.T) {
 			ctx := context{
-				fastMode:       true,
-				stars:          test.starLimit,
-				scanFirstStars: test.scanFirstStars,
+				scanAll: test.scanAll,
+				stars:   test.starLimit,
 			}
 
 			cursors := getCursors(ctx, test.stargazers, test.totalUsers)
