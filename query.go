@@ -38,25 +38,13 @@ type context struct {
 	githubToken        string
 	cacheDirectoryPath string
 
-	// If fastMode is set to true and that the repository
-	// has more than ${stars} stargazers, pick
-	// ${stars}/${contribPagination} number of cursors
-	// randomly from all cursors.
-	fastMode bool
+	// scanAll makes astronomer scan every stargazer
+	// when set to true.
+	scanAll bool
 
 	// Amount of stars to scan in fastMode. Will be used only if
 	// fastMode is enabled.
 	stars uint
-
-	// When set to true, overrides the fast mode and simply scans the
-	// first ${stars} stargazers on this repository. Useful to detect
-	// botted/bought stars that were used to initially boost a repo's
-	// popularity.
-	scanFirstStars bool
-
-	// If details is set to true, astronomer will print
-	// additional factors such as percentiles.
-	details bool
 }
 
 func buildRequestBody(ctx context, baseRequest string, pagination int) string {
@@ -190,7 +178,6 @@ func fetchStargazers(ctx context) (cursors []string, totalUsers uint, err error)
 		// It would be nice to have a reliable way to figure out whether or not
 		// we reached the end of the list.
 		if len(response.Repository.Stargazers.Users) < listPagination {
-			disgo.Infoln("Reached end of stargazer list")
 			break
 		}
 
@@ -249,37 +236,46 @@ func getCursors(ctx context, sg []stargazers, totalUsers uint) []string {
 		}
 	}
 
-	if ctx.scanFirstStars {
-		disgo.Infof("Scanning first %d stars out of %d\n", ctx.stars, totalUsers)
-		amount := int(ctx.stars) / contribPagination
-
-		return cursors[len(cursors)-amount-1 : len(cursors)-1]
+	if ctx.scanAll || totalUsers < ctx.stars || totalUsers < 1000 {
+		disgo.Infof("All %d stargazers will be scanned\n", totalUsers)
+		return cursors
 	}
 
-	if ctx.fastMode && totalUsers > ctx.stars {
-		disgo.Infof("Fast mode enabled, scanning %d random stargazers out of %d\n", ctx.stars, totalUsers)
-		return pickRandomStrings(cursors, ctx.stars/uint(contribPagination))
-	}
+	var selectedCursors []string
 
-	return cursors
+	// totalCursorAmount is the total amount of cursors to fetch.
+	// totalCursorAmount := int(ctx.stars) / contribPagination
+
+	// beginCursorAmount is the amount of cursors to fetch for the 200 first users.
+	disgo.Infof("Selecting 200 first stargazers out of %d\n", totalUsers)
+	beginCursorAmount := 200/contribPagination - 1
+
+	selectedCursors = append(selectedCursors, cursors[len(cursors)-beginCursorAmount-1:len(cursors)-1]...)
+
+	// endCursorAmount is the amount of cursors to fetch to get the random users.
+	// endCursorAmount := totalCursorAmount - beginCursorAmount
+	// disgo.Infof("Selecting %d random stargazers out of %d\n", (endCursorAmount-1)*contribPagination, totalUsers)
+
+	// selectedCursors = pickRandomStringsExcept(cursors, selectedCursors, uint(endCursorAmount))
+
+	return selectedCursors
 }
 
 // Pick random strings picks ${amount} random strings from the
-// given slice of strings.
-func pickRandomStrings(s []string, amount uint) []string {
+// given slice of strings, except those that were already picked.
+func pickRandomStringsExcept(s []string, picked []string, amount uint) []string {
 	// Make the random non-deterministic.
 	seed := rand.NewSource(time.Now().UnixNano())
 	random := rand.New(seed)
 
-	var indexes []int
 	for i := uint(1); i < amount; i++ {
-		// Generate an index.
-		newIndex := random.Intn(len(s) - 1)
+		// Pick a string.
+		newPick := s[random.Intn(len(s)-1)]
 
 		// Check if it has already been selected.
 		var found bool
-		for _, index := range indexes {
-			if newIndex == index {
+		for _, alreadyPicked := range picked {
+			if newPick == alreadyPicked {
 				found = true
 			}
 		}
@@ -290,15 +286,10 @@ func pickRandomStrings(s []string, amount uint) []string {
 			continue
 		}
 
-		indexes = append(indexes, newIndex)
+		picked = append(picked, newPick)
 	}
 
-	var strings []string
-	for _, index := range indexes {
-		strings = append(strings, s[index])
-	}
-
-	return strings
+	return picked
 }
 
 func isBlacklisted(user string) bool {
@@ -328,11 +319,11 @@ func setupProgressBar(pages int) *mpb.Bar {
 	return bar
 }
 
-func getCursor(cursors []string, page int, scanFirstStars bool) string {
+func getCursor(cursors []string, page int, reverseOrder bool) string {
 	// If scanning in the reverse order, we don't have any page without
 	// a cursor, so we don't start using the cursor from page 2 but
 	// the first one directly.
-	if scanFirstStars && page > 0 {
+	if reverseOrder && page > 0 {
 		return cursors[page-1]
 	}
 
@@ -359,18 +350,23 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 
 	progressBar := setupProgressBar(len(cursors) + 1)
 
+	// If we are scanning only a portion of stargazers, the
+	// scan does not start with a page without a cursor.
+	isReverseOrder := uint(len(cursors)) > ctx.stars/contribPagination
+
 	totalPages := len(cursors)
+
 	// If we don't scan in reverse order (first stars first), we
 	// have fetch each page pointed at by the cursors, plus the first
 	// page which doesn't require a cursor.
-	if !ctx.scanFirstStars {
+	if !isReverseOrder {
 		totalPages++
 	}
 
 	// Iterate on pages of user contributions, following the cursors generated
 	// in fetchStargazers.
 	for page := 1; page <= totalPages; page++ {
-		currentCursor := getCursor(cursors, page, ctx.scanFirstStars)
+		currentCursor := getCursor(cursors, page, isReverseOrder)
 
 		// If this isn't the first page, inject the cursor value.
 		paginatedRequestBody := requestBody
@@ -379,7 +375,8 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 				paginatedRequestBody,
 				fmt.Sprintf("stargazers(first:%d){", contribPagination),
 				fmt.Sprintf("stargazers(first:%d,after:\\\"%s\\\"){", contribPagination, currentCursor),
-				1)
+				1,
+			)
 		}
 
 		// Get all user contributions for each year.
@@ -419,8 +416,6 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 			// If the request was not found in the cache, try to fetch it until it works
 			// or until the limit of 20 attempts is reached.
 			if !cachedFileFound {
-				// disgo.StartStepf("Fetching user contributions from users %d to %d for year %d", (page-1)*contribPagination, (page)*contribPagination, currentYear-i)
-
 				var attempts int
 				backoff.Retry(func() error {
 					// If we reached 20 attempts, give up.

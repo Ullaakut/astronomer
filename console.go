@@ -26,8 +26,8 @@ const (
 	secondColumnLength = 15
 )
 
-// renderReport prints a
-func renderReport(details bool, report *trustReport) {
+// renderReport prints a report.
+func renderReport(report *trustReport) {
 	if report == nil {
 		disgo.Errorln(style.Failure(style.SymbolCross, " No report to render."))
 		return
@@ -43,8 +43,6 @@ func renderReport(details bool, report *trustReport) {
 		for _, percentile := range percentiles {
 			printPercentile(percentile, report.percentiles[percentile])
 		}
-	} else if details {
-		disgo.Errorln(style.Failure(style.SymbolCross), "Not enough stargazers to be able to compute percentiles.")
 	}
 
 	printResult("Overall trust", report.factors[overallTrust])

@@ -7,6 +7,7 @@ import (
 
 	"github.com/montanaflynn/stats"
 	"github.com/ullaakut/disgo"
+	"github.com/ullaakut/disgo/style"
 )
 
 type trustFactor struct {
@@ -25,15 +26,9 @@ type trustReport struct {
 
 // computeTrustReport computes all trust factors for the stargazers of a repository.
 func computeTrustReport(ctx context, users []user) (*trustReport, error) {
-	var scorePercentiles map[float64]trustFactor
-
 	trustData := make(map[factorName][]float64)
 	now := time.Now().Year()
 
-	// Sleep a tiny bit to ensure that the progress bar is updated.
-	time.Sleep(10 * time.Millisecond)
-
-	disgo.StartStepf("Computing trust report for %d users", len(users))
 	for idx := range users {
 		var contributionScore float64
 		for year, contributions := range users[idx].yearlyContributions {
@@ -55,31 +50,21 @@ func computeTrustReport(ctx context, users []user) (*trustReport, error) {
 		trustData[contributionScoreFactor] = append(trustData[contributionScoreFactor], contributionScore)
 	}
 
-	// Only compute percentiles if details are enabled and
-	// there are enough stargazers to be able to compute every
-	// fifth percentile.
-	if ctx.details && len(users) >= 20 {
-		scorePercentiles = make(map[float64]trustFactor)
-		for _, percentile := range percentiles {
-			value, err := stats.Percentile(trustData[contributionScoreFactor], percentile)
-			if err != nil {
-				return nil, fmt.Errorf("unable to compute score trust %2.fth percentile: %v", percentile, err)
-			}
+	disgo.StartStepf("Building trust report")
 
-			scorePercentiles[percentile] = trustFactor{
-				value:        value,
-				trustPercent: computeTrustFromScore(value, percentileReferences[percentile]),
-			}
-		}
+	defer disgo.EndStep()
+
+	if ctx.stars == uint(len(users)) {
+		return buildComparativeReport(trustData)
 	}
 
-	return buildReport(trustData, scorePercentiles)
+	return buildReport(trustData)
 }
 
-func buildReport(trustData map[factorName][]float64, scorePercentiles map[float64]trustFactor) (*trustReport, error) {
+func buildReport(trustData map[factorName][]float64) (*trustReport, error) {
 	report := &trustReport{
-		percentiles: scorePercentiles,
 		factors:     make(map[factorName]trustFactor),
+		percentiles: make(map[float64]trustFactor),
 	}
 
 	for factor, data := range trustData {
@@ -95,6 +80,23 @@ func buildReport(trustData map[factorName][]float64, scorePercentiles map[float6
 		}
 	}
 
+	// Only compute percentiles if details are enabled and
+	// there are enough stargazers to be able to compute every
+	// fifth percentile.
+	if len(trustData[contributionScoreFactor]) > 20 {
+		for _, percentile := range percentiles {
+			value, err := stats.Percentile(trustData[contributionScoreFactor], percentile)
+			if err != nil {
+				return nil, fmt.Errorf("unable to compute score trust %2.fth percentile: %v", percentile, err)
+			}
+
+			report.percentiles[percentile] = trustFactor{
+				value:        value,
+				trustPercent: computeTrustFromScore(value, percentileReferences[percentile]),
+			}
+		}
+	}
+
 	var allTrust []float64
 	for factorName, weight := range factorWeights {
 		for i := 0; i < weight; i++ {
@@ -104,7 +106,7 @@ func buildReport(trustData map[factorName][]float64, scorePercentiles map[float6
 
 	// Take percentiles into consideration, if they were
 	// computed.
-	for _, percentileTrust := range scorePercentiles {
+	for _, percentileTrust := range report.percentiles {
 		allTrust = append(allTrust, percentileTrust.trustPercent)
 	}
 
@@ -117,9 +119,95 @@ func buildReport(trustData map[factorName][]float64, scorePercentiles map[float6
 		trustPercent: trust,
 	}
 
-	disgo.EndStep()
+	return report, nil
+}
+
+// buildComparativeReport splits the trust data and percentiles between the first stargazers
+// and current stargazers, and it then builds a report that contains the worst of both sets.
+func buildComparativeReport(trustData map[factorName][]float64) (*trustReport, error) {
+	report := &trustReport{
+		factors:     make(map[factorName]trustFactor),
+		percentiles: make(map[float64]trustFactor),
+	}
+
+	firstStarsTrust, currentStarsTrust := splitTrustData(trustData)
+
+	// Compute one trust report for the early stargazers.
+	firstStarsReport, err := buildReport(firstStarsTrust)
+	if err != nil {
+		return nil, err
+	}
+
+	disgo.Infoln(style.Important("First 200 stargazers"))
+
+	renderReport(firstStarsReport)
+
+	// Compute another trust report for the random stargazers.
+	currentStarsReport, err := buildReport(currentStarsTrust)
+	if err != nil {
+		return nil, err
+	}
+
+	disgo.Infoln(style.Important(len(currentStarsTrust[contributionScoreFactor]), " random stargazers"))
+
+	renderReport(currentStarsReport)
+
+	// Build comparative report using data from both sets.
+	for _, factor := range factors {
+		if firstStarsReport.factors[factor].trustPercent <= currentStarsReport.factors[factor].trustPercent {
+			report.factors[factor] = firstStarsReport.factors[factor]
+		} else {
+			report.factors[factor] = currentStarsReport.factors[factor]
+		}
+	}
+
+	for _, percentile := range percentiles {
+		if firstStarsReport.percentiles[percentile].trustPercent <= currentStarsReport.percentiles[percentile].trustPercent {
+			report.percentiles[percentile] = firstStarsReport.percentiles[percentile]
+		} else {
+			report.percentiles[percentile] = currentStarsReport.percentiles[percentile]
+		}
+	}
+
+	var allTrust []float64
+	for factorName, weight := range factorWeights {
+		for i := 0; i < weight; i++ {
+			allTrust = append(allTrust, report.factors[factorName].trustPercent)
+		}
+	}
+
+	for _, percentile := range percentiles {
+		allTrust = append(allTrust, report.percentiles[percentile].trustPercent)
+	}
+
+	trust, err := stats.Mean(allTrust)
+	if err != nil {
+		return nil, disgo.FailStepf("unable to compute overall trust: %v", err)
+	}
+
+	report.factors[overallTrust] = trustFactor{
+		trustPercent: trust,
+	}
 
 	return report, nil
+}
+
+func splitTrustData(trustData map[factorName][]float64) (first, current map[factorName][]float64) {
+	total := len(trustData[contributionScoreFactor])
+
+	// Compute first stars.
+	first = make(map[factorName][]float64)
+	current = make(map[factorName][]float64)
+	for _, factor := range factors {
+		for i := 0; i < 200; i++ {
+			first[factor] = append(first[factor], trustData[factor][i])
+		}
+		for i := total / 2; i < total; i++ {
+			current[factor] = append(current[factor], trustData[factor][i])
+		}
+	}
+
+	return first, current
 }
 
 // computeTrustFromScore takes a score and a reference expected score,
