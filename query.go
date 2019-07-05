@@ -27,7 +27,7 @@ var (
 	// in a list request, he must be skipped when fetching user contributions
 	// or astronomer will be stuck due to constant API timeouts.
 	blacklistedUsers = []string{
-		"jstrachan",
+		// "jstrachan", // has been fixed.
 	}
 )
 
@@ -71,17 +71,18 @@ func fetchStargazers(ctx context) (cursors []string, totalUsers uint, err error)
 		rateLimitSleep time.Duration
 	)
 
+	// Inject constants in request body.
 	requestBody := buildRequestBody(ctx, fetchUsersRequest, listPagination)
 	client := &http.Client{}
 
-	defer disgo.EndStep()
-
 	disgo.StartStep("Pre-fetching all stargazers")
 
-	for {
-		page++
+	defer disgo.EndStep()
 
+	for {
 		var response *listStargazersResponse
+
+		page++
 
 		paginatedRequestBody := requestBody
 		if lastCursor != "" {
@@ -100,6 +101,8 @@ func fetchStargazers(ctx context) (cursors []string, totalUsers uint, err error)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", ctx.githubToken))
 		req.Header.Set("User-Agent", "Astronomer")
 
+		// Attempt to find the response to this specific request already stored
+		// in the cache directory.
 		resp, err := getCache(ctx, req, listFilePagination(lastCursor))
 		if err != nil {
 			return nil, 0, disgo.FailStepf("unable to get cached file: %v", err)
@@ -164,6 +167,8 @@ func fetchStargazers(ctx context) (cursors []string, totalUsers uint, err error)
 			return nil, 0, disgo.FailStepf("failed to fetch user contributions. last body recieved: %s", responseBody)
 		}
 
+		// Since we arrived here, we got a successful response, so we store it
+		// in the cache directory.
 		err = putCache(ctx, req, listFilePagination(lastCursor), responseBody)
 		if err != nil {
 			return nil, 0, disgo.FailStepf("unable to write user contribution data to cache: %v", err)
@@ -173,10 +178,6 @@ func fetchStargazers(ctx context) (cursors []string, totalUsers uint, err error)
 
 		totalUsers += uint(len(response.Repository.Stargazers.Users))
 
-		// TODO: This will break if the repository has a number of users that
-		// is a factor of ${listPagination}. In that case, it will loop forever.
-		// It would be nice to have a reliable way to figure out whether or not
-		// we reached the end of the list.
 		if len(response.Repository.Stargazers.Users) < listPagination {
 			break
 		}
@@ -236,7 +237,7 @@ func getCursors(ctx context, sg []stargazers, totalUsers uint) []string {
 		}
 	}
 
-	if ctx.scanAll || totalUsers < ctx.stars || totalUsers < 1000 {
+	if ctx.scanAll || totalUsers < ctx.stars || totalUsers < 200 {
 		disgo.Infof("All %d stargazers will be scanned\n", totalUsers)
 		return cursors
 	}
@@ -244,7 +245,7 @@ func getCursors(ctx context, sg []stargazers, totalUsers uint) []string {
 	var selectedCursors []string
 
 	// totalCursorAmount is the total amount of cursors to fetch.
-	// totalCursorAmount := int(ctx.stars) / contribPagination
+	totalCursorAmount := int(ctx.stars) / contribPagination
 
 	// beginCursorAmount is the amount of cursors to fetch for the 200 first users.
 	disgo.Infof("Selecting 200 first stargazers out of %d\n", totalUsers)
@@ -253,10 +254,10 @@ func getCursors(ctx context, sg []stargazers, totalUsers uint) []string {
 	selectedCursors = append(selectedCursors, cursors[len(cursors)-beginCursorAmount-1:len(cursors)-1]...)
 
 	// endCursorAmount is the amount of cursors to fetch to get the random users.
-	// endCursorAmount := totalCursorAmount - beginCursorAmount
-	// disgo.Infof("Selecting %d random stargazers out of %d\n", (endCursorAmount-1)*contribPagination, totalUsers)
+	endCursorAmount := totalCursorAmount - beginCursorAmount
+	disgo.Infof("Selecting %d random stargazers out of %d\n", (endCursorAmount-1)*contribPagination, totalUsers)
 
-	// selectedCursors = pickRandomStringsExcept(cursors, selectedCursors, uint(endCursorAmount))
+	selectedCursors = pickRandomStringsExcept(cursors, selectedCursors, uint(endCursorAmount))
 
 	return selectedCursors
 }
@@ -292,6 +293,7 @@ func pickRandomStringsExcept(s []string, picked []string, amount uint) []string 
 	return picked
 }
 
+// isBlacklisted checks if a user is blacklisted.
 func isBlacklisted(user string) bool {
 	for _, blacklistedUser := range blacklistedUsers {
 		if user == blacklistedUser {
@@ -302,6 +304,8 @@ func isBlacklisted(user string) bool {
 	return false
 }
 
+// setupProgressBar sets the progress bar properly according to
+// the expected amount of pages of data.
 func setupProgressBar(pages int) *mpb.Bar {
 	p := mpb.New(mpb.WithWidth(64))
 
@@ -319,6 +323,8 @@ func setupProgressBar(pages int) *mpb.Bar {
 	return bar
 }
 
+// getCursor returns the current cursor for the given page, depending on the
+// order the cursors are being read in.
 func getCursor(cursors []string, page int, reverseOrder bool) string {
 	// If scanning in the reverse order, we don't have any page without
 	// a cursor, so we don't start using the cursor from page 2 but
@@ -525,6 +531,8 @@ func parseResponse(resp *http.Response) (*listStargazersResponse, []byte, error)
 	return &response, responseBody, nil
 }
 
+// updateUsers updates a slice of user from the data in a list stargazer response.
+// It also sets their yearly contributions accordingly.
 func updateUsers(users []user, response listStargazersResponse, year int) []user {
 	var (
 		found    bool
