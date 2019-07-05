@@ -67,31 +67,9 @@ The `astronomer` binary will then be available in `$GOPATH/bin/astronomer`.
 
 * It is required to specify a repository in the form `repositoryOwner/repositoryName`. This argument's position does not matter.
 * **`-c, --cachedir` (string)**: Set the directory in which to store cache data (default: `./data`)
-* **`-s, --stars`**: Maxmimum amount of stars to scan (picked randomly), if fast mode is enabled (default: `1000`)
-* **`-d, --debug`**: Show more detailed trust factors, such as percentiles (default: `false`)
-* **`--fast`**: Enable fast mode in order to scan random stargazers instead of all of them (slightly less accurate) (default: `true`)
-* **`--scanFirstStars`**: Scan the first stars of the repository (overrides fast mode). Set amount of stars with --stars options (default: `false`)
-
-## Example use cases
-
-> _Scanning a repository with detailed statistics_
-
-**With the binary**: `astronomer --details ${repoOwner}/${repoName}`
-**With the docker image**: `docker run -e GITHUB_TOKEN="$GITHUB_TOKEN" -v "/tmp:/data" -t ullaakut/astronomer --details ${repoOwner}/${repoName}`
-
-Note that you can also use the `-d` flag instead of `--details`.
-
-> _Run a full scan of a repository with detailed statistics_
-
-**With the binary**: `astronomer --details --fast=false ${repoOwner}/${repoName}`
-**With the docker image**: `docker run -e GITHUB_TOKEN="$GITHUB_TOKEN" -v "/tmp:/data" -t ullaakut/astronomer --details --fast=false ${repoOwner}/${repoName}`
-
-Make sure to mount a directory that is safe from deletion (not `/tmp` like in this example) as the scan might take hours or days, and if it is stopped while fetching data, the cache folder will allow you to recover to your fetching state in a few seconds. If the cache is lost however, you will need to restart the scan.
-
-> _Scanning the first 500 stars of a repository, with detailed statistics_
-
-**With the binary**: `astronomer --scanFirstStars --stars="500" --details ${repoOwner}/${repoName}`
-**With the docker image**: `docker run -e GITHUB_TOKEN="$GITHUB_TOKEN" -v "/tmp:/data" -t ullaakut/astronomer --scanFirstStars --stars="500" --details ${repoOwner}/${repoName}`
+* **`-s, --stars`**: Set the maxmimum amount of stars to scan (default: `1000`)
+* **`--verbose`**: Show extra logs, such as comparative reports and debug logs (default: `true`)
+* **`--scanall`**: Scan all stargazers. This option overrides the `--stars` option, and it is not recommended as it might take hours (default: `false`)
 
 ## Upcoming features
 
@@ -116,19 +94,13 @@ Keep in mind that scans are always going to be long for huge repositories. A 10K
 
 ## Questions & Answers
 
-> _How accurate is this algorithm? Why does my repository has a low trust level?_
+> _How accurate is this algorithm? Why does my repository have a low trust level?_
 
-Astronomer only attempts to estimate a trust level. The more stargazers there are on a repository, the more accurate it will be. Since the algorithm compares averages of the scanned repositories with global averages, if your repository has only two stars and that both are from new accounts with low contributions, it will seem extremely fishy to Astronomer, even if those are probably real stars. The goal of Astronomer is more orentied towards popular projects with thousands of stars, where the first few thousands might have been from bot accounts, used to boost the project's popularity.
+Astronomer only attempts to estimate a trust level. The more stargazers there are on a repository, the more accurate it will be. Since the algorithm compares averages of the scanned repositories with global averages, if your repository has only two stars and that both are from new accounts with low contributions, it will seem extremely fishy to Astronomer, even if those are probably real stars. The goal of Astronomer is more orentied towards popular projects with thousands of stars, where the first few hundreds might have been from bot accounts, used to boost the project's popularity.
 
 > _Why would fake stars be an issue? The number of stars doesn't really matter._
 
 Repositories with high amounts of stars, especially when they arrive in bursts, are often found in [GitHub trending](https://github.com/trending), they are also emailed to people who subscribed to the [GitHub Explore](https://github.com/explore?since=daily) daily newsletter. This means that an open source project can get actual users to use their software by bringing attention to it using illegitimate bot accounts. Many startups are known for choosing technologies to use based on GitHub stars, since they provide the comforting thought that the project is backed by a strong community. Unfortunately, as far as I know, GitHub currently does not attempt to prevent this from happening.
-
-> _Why is `Astronomer` so slow? It's been scanning a project for hours._
-
-If you disabled the fast mode, this is normal. It's fetching all contributions from each individual stargazer of this repository. In most cases, running the scan with fast mode enabled (which is the case by default) should never take more than 30mns to scan a repository, unless you have network issues. It will be slightly less accurate, but significantly faster.
-
-With fast mode disabled, Astronomer needs to make a lot of queries to the GitHub API in order to fetch all of the user data. It typically needs to do one request per page of stargazers per year of contributions, (as of 2019 that's 11 requests per 30 users). The issue is that the GitHub API is rate limited to 5000 requests per hour, so for a scan of 25000 stars for example, about 9000 requests are required, which will result in at least a two hour scan (takes about 6 hours on my machine/network). I plan on contacting GitHub to try to get a token with more flexible rate limiting, since I believe this project is beneficial to their business, but I'm not confident this request will be accepted.
 
 > _How can I contribute to this project?_
 
@@ -138,13 +110,9 @@ If you are a software engineer or a web developer (or both), you could also part
 
 Also, if you have data to backup a claim that you have a better value for the good/bad constants (used to determine what is a good or bad value for a specific metric), feel free to reach out to me. This is an essential part of having a precise estimation of how legit a repository is, and improving these constants would improve the overall quality of the algorithm.
 
-> _What is the end goal of this project?_
-
-Ideally, this should be a GitHub feature. The issue is that it's actually almost impossible to differentiate a bot account and the account of someone who just created a GH account to star a repository and show their support, which can lead to angry customers for GitHub if they chose to ban potentially illegitimate accounts. It's also very easy for people who make bot accounts to make them seem legit by creating private repositories with daily contributions, but this can also be detected to some extent, if it's a trend that ends up appearing.
-
 > _What's the strange hardcoded skip in the `query.go` file?_
 
-Unfortunately there's an issue in the GitHub API, where [this user](https://github.com/jstrachan) has so many contributions that all API requests that would contain his contributions time out, consistently. Since he starred `containous/traefik`, I had to hardcode a skip in order to allow the scan to continue (since the GH API's only method of pagination is to use the `cursor` returned by the user node, I had to manually get his cursor value myself and hardcode it. Writing logic to handle this case generically whenever it happens would be possible but I'm not sure it's a priority right now). I've sent a support request to GitHub so when they fix it, I'll make sure to remove this skip.
+Unfortunately there was an issue in the GitHub API, where all API queries containing [this user](https://github.com/jstrachan)'s contributions consistenly timed out. Since he starred `containous/traefik`, I had to hardcode a skip in order to allow the scan to continue (since the GH API's only method of pagination is to use the `cursor` returned by the user node, get his cursor value manually and hardcode it in the blacklist. It has since been solved by GitHub but I'm keeping this logic in place in case it's ever needed again.
 
 ## Thanks
 
