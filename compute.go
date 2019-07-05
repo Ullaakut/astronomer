@@ -192,6 +192,7 @@ func buildComparativeReport(trustData map[factorName][]float64) (*trustReport, e
 	return report, nil
 }
 
+// splitTrustData split a trust data map between first and random stargazers.
 func splitTrustData(trustData map[factorName][]float64) (first, current map[factorName][]float64) {
 	total := len(trustData[contributionScoreFactor])
 
@@ -202,7 +203,7 @@ func splitTrustData(trustData map[factorName][]float64) (first, current map[fact
 		for i := 0; i < 200; i++ {
 			first[factor] = append(first[factor], trustData[factor][i])
 		}
-		for i := total / 2; i < total; i++ {
+		for i := 200; i < total; i++ {
 			current[factor] = append(current[factor], trustData[factor][i])
 		}
 	}

@@ -15,7 +15,7 @@ func parseArguments() error {
 	viper.SetEnvPrefix("astronomer")
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 
-	pflag.BoolP("verbose", "", true, "Show extra logs (including comparative reports)")
+	pflag.BoolP("verbose", "", false, "Show extra logs (including comparative reports)")
 	pflag.BoolP("all", "a", false, "Force astronomer to scall every stargazer of the repository (overrides --stars)")
 	pflag.UintP("stars", "s", 1000, "Maxmimum amount of stars to scan, if fast mode is enabled")
 	pflag.StringP("cachedir", "c", "./data", "Set the directory in which to store cache data")

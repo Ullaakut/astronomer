@@ -68,7 +68,7 @@ The `astronomer` binary will then be available in `$GOPATH/bin/astronomer`.
 * It is required to specify a repository in the form `repositoryOwner/repositoryName`. This argument's position does not matter.
 * **`-c, --cachedir` (string)**: Set the directory in which to store cache data (default: `./data`)
 * **`-s, --stars`**: Set the maxmimum amount of stars to scan (default: `1000`)
-* **`--verbose`**: Show extra logs, such as comparative reports and debug logs (default: `true`)
+* **`--verbose`**: Show extra logs, such as comparative reports and debug logs (default: `false`)
 * **`--scanall`**: Scan all stargazers. This option overrides the `--stars` option, and it is not recommended as it might take hours (default: `false`)
 
 ## Upcoming features
