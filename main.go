@@ -39,7 +39,7 @@ func parseArguments() error {
 }
 
 func main() {
-	disgo.SetTerminalOptions(disgo.WithColors(true), disgo.WithDebug(viper.GetBool("debug")))
+	disgo.SetTerminalOptions(disgo.WithColors(true), disgo.WithDebug(viper.GetBool("verbose")))
 
 	err := parseArguments()
 	if err != nil {

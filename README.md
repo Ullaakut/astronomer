@@ -48,12 +48,12 @@ In order to use Astronomer, you'll need a GitHub token with `repo` read rights. 
 
 Run `docker pull ullaakut/astronomer`.
 
-Then, use the astronomer docker image like such: `docker run -t -e GITHUB_TOKEN=$GITHUB_TOKEN -v "/path/to/your/cache/folder:/data/" ullaakut/astronomer repositoryOwner/repositoryName -d`
+Then, use the astronomer docker image like such: `docker run -t -e GITHUB_TOKEN=$GITHUB_TOKEN -v "/path/to/your/cache/folder:/data/" ullaakut/astronomer repositoryOwner/repositoryName --verbose`
 
 * The `-t` flag allows you to get a colored output. You can remove it from the command line if you don't care about this.
 * The `-e GITHUB_TOKEN=<your_token>` option is mandatory. The GitHub API won't authorize any requests without it.
 * The `-v "/path/to/your/cache/folder:/data/"` option can be used to cache the responses from the GitHub API on your machine. This means that the next time you run a scan, Astronomer will simply update its cache with the new stargazers since your last scan, and compute the trust levels again. It is highly recommended to use cache if you plan on scanning popular repositories (more than 1000 stars) more than once.
-* The `-d` flag enables more detailed trust factor computation.
+* The `--verbose` flag enables the verbose mode which displays more detailed logs.
 
 ### Binary
 
@@ -68,8 +68,8 @@ The `astronomer` binary will then be available in `$GOPATH/bin/astronomer`.
 * It is required to specify a repository in the form `repositoryOwner/repositoryName`. This argument's position does not matter.
 * **`-c, --cachedir` (string)**: Set the directory in which to store cache data (default: `./data`)
 * **`-s, --stars`**: Set the maxmimum amount of stars to scan (default: `1000`)
+* **`-a, --all`**: Scan all stargazers. This option overrides the `--stars` option, and it is not recommended as it might take hours (default: `false`)
 * **`--verbose`**: Show extra logs, such as comparative reports and debug logs (default: `false`)
-* **`--scanall`**: Scan all stargazers. This option overrides the `--stars` option, and it is not recommended as it might take hours (default: `false`)
 
 ## Upcoming features
 
