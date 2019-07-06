@@ -2,14 +2,14 @@ package main
 
 const (
 	privateContributionFactor  factorName = "Private contributions"
-	contributionScoreFactor               = "Weighted contributions"
-	issueContributionFactor               = "Created issues"
-	commitContributionFactor              = "Commits authored"
-	repoContributionFactor                = "Repositories"
-	prContributionFactor                  = "Pull requests"
-	prReviewContributionFactor            = "Code reviews"
-	accountAgeFactor                      = "Account age (days)"
-	overallTrust                          = "Overall trust"
+	contributionScoreFactor    factorName = "Weighted contributions"
+	issueContributionFactor    factorName = "Created issues"
+	commitContributionFactor   factorName = "Commits authored"
+	repoContributionFactor     factorName = "Repositories"
+	prContributionFactor       factorName = "Pull requests"
+	prReviewContributionFactor factorName = "Code reviews"
+	accountAgeFactor           factorName = "Account age (days)"
+	overallTrust               factorName = "Overall trust"
 )
 
 // TODO: If we allow users to choose the year until which

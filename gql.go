@@ -78,10 +78,8 @@ type gqlError struct {
 }
 
 type gqlErrorExtension struct {
-	code         string `json:"code"`
-	name         string `json:"name"`
-	typeName     string `json:"typeName"`
-	argumentName string `json:"argumentName"`
+	Name         string `json:"name"`
+	ArgumentName string `json:"argumentName"`
 }
 
 type response struct {
