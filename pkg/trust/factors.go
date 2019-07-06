@@ -1,29 +1,30 @@
 package trust
 
+// Factors.
 const (
-	privateContributionFactor  FactorName = "Private contributions"
-	contributionScoreFactor    FactorName = "Weighted contributions"
-	issueContributionFactor    FactorName = "Created issues"
-	commitContributionFactor   FactorName = "Commits authored"
-	repoContributionFactor     FactorName = "Repositories"
-	prContributionFactor       FactorName = "Pull requests"
-	prReviewContributionFactor FactorName = "Code reviews"
-	accountAgeFactor           FactorName = "Account age (days)"
-	overallTrust               FactorName = "Overall trust"
+	PrivateContributionFactor  FactorName = "Private contributions"
+	ContributionScoreFactor    FactorName = "Weighted contributions"
+	IssueContributionFactor    FactorName = "Created issues"
+	CommitContributionFactor   FactorName = "Commits authored"
+	RepoContributionFactor     FactorName = "Repositories"
+	PRContributionFactor       FactorName = "Pull requests"
+	PRReviewContributionFactor FactorName = "Code reviews"
+	AccountAgeFactor           FactorName = "Account age (days)"
+	Overall                    FactorName = "Overall trust"
 )
 
 // TODO: If we allow users to choose the year until which
 // to scan, references will be needed for each year.
 var (
 	factors = []FactorName{
-		contributionScoreFactor,
-		privateContributionFactor,
-		issueContributionFactor,
-		commitContributionFactor,
-		repoContributionFactor,
-		prContributionFactor,
-		prReviewContributionFactor,
-		accountAgeFactor,
+		ContributionScoreFactor,
+		PrivateContributionFactor,
+		IssueContributionFactor,
+		CommitContributionFactor,
+		RepoContributionFactor,
+		PRContributionFactor,
+		PRReviewContributionFactor,
+		AccountAgeFactor,
 	}
 
 	percentiles = []Percentile{"5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "85", "90", "95"}
@@ -31,14 +32,14 @@ var (
 	// References are based on the average values of values typically
 	// found on popular repositories.
 	factorReferences = map[FactorName]float64{
-		privateContributionFactor:  600,
-		contributionScoreFactor:    24000,
-		issueContributionFactor:    20,
-		commitContributionFactor:   370,
-		repoContributionFactor:     30,
-		prContributionFactor:       20,
-		prReviewContributionFactor: 10,
-		accountAgeFactor:           1600,
+		PrivateContributionFactor:  600,
+		ContributionScoreFactor:    24000,
+		IssueContributionFactor:    20,
+		CommitContributionFactor:   370,
+		RepoContributionFactor:     30,
+		PRContributionFactor:       20,
+		PRReviewContributionFactor: 10,
+		AccountAgeFactor:           1600,
 	}
 
 	percentileReferences = map[Percentile]float64{
@@ -66,13 +67,13 @@ var (
 	// factorWeights represents the importance of each factor in
 	// the calculation of the overall trust factor.
 	factorWeights = map[FactorName]int{
-		privateContributionFactor:  1,
-		issueContributionFactor:    3,
-		commitContributionFactor:   3,
-		repoContributionFactor:     2,
-		prContributionFactor:       2,
-		prReviewContributionFactor: 2,
-		contributionScoreFactor:    8,
-		accountAgeFactor:           2,
+		PrivateContributionFactor:  1,
+		IssueContributionFactor:    3,
+		CommitContributionFactor:   3,
+		RepoContributionFactor:     2,
+		PRContributionFactor:       2,
+		PRReviewContributionFactor: 2,
+		ContributionScoreFactor:    8,
+		AccountAgeFactor:           2,
 	}
 )

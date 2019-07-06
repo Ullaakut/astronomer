@@ -42,7 +42,6 @@ func Check(report *SignedReport) error {
 		return fmt.Errorf("unable to sign trust report: %v", err)
 	}
 
-	fmt.Sprintf("Generated sign: %x\nReport sign: %v\n", signature, report.Signature)
 	if !bytes.Equal(signature, report.Signature) {
 		return errors.New("signature doesn't match")
 	}
