@@ -42,8 +42,7 @@ type context struct {
 	// when set to true.
 	scanAll bool
 
-	// Amount of stars to scan in fastMode. Will be used only if
-	// fastMode is enabled.
+	// Amount of stars to scan in fastMode.
 	stars uint
 }
 
