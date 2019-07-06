@@ -26,11 +26,24 @@ const (
 	secondColumnLength = 15
 )
 
+var printFunc = disgo.Infof
+
 // renderReport prints a report.
-func renderReport(report *trustReport) {
+func renderReport(report *trustReport, verboseOnly bool) {
 	if report == nil {
 		disgo.Errorln(style.Failure(style.SymbolCross, " No report to render."))
 		return
+	}
+
+	// If these logs are supposed to be shown in verbose mode only,
+	// change the printing function to debug and set it back to normal
+	// once the report is rendered.
+	if verboseOnly {
+		printFunc = disgo.Debugf
+
+		defer func() {
+			printFunc = disgo.Infof
+		}()
 	}
 
 	printHeader()
@@ -68,7 +81,7 @@ func printHeader() {
 	format = tabulateFormat(format, underlines[1], secondColumnLength)
 
 	// Render the header.
-	disgo.Infof(
+	printFunc(
 		format,
 		style.Important(headerNames[0]), style.Important(headerNames[1]), style.Important(headerNames[2]),
 		underlines[0], underlines[1], underlines[2],
@@ -82,11 +95,11 @@ func printTrustFactor(trustFactorName string, trustFactor trustFactor) {
 	format = tabulateFormat(format, fmt.Sprintf("%1.f", trustFactor.value), secondColumnLength)
 
 	if trustFactor.trustPercent < 0.5 {
-		disgo.Infof(format, trustFactorName, style.Failure(fmt.Sprintf("%1.f", trustFactor.value)), style.Failure(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
+		printFunc(format, trustFactorName, style.Failure(fmt.Sprintf("%1.f", trustFactor.value)), style.Failure(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	} else if trustFactor.trustPercent < 0.75 {
-		disgo.Infof(format, trustFactorName, style.Important(fmt.Sprintf("%1.f", trustFactor.value)), style.Important(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
+		printFunc(format, trustFactorName, style.Important(fmt.Sprintf("%1.f", trustFactor.value)), style.Important(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	} else {
-		disgo.Infof(format, trustFactorName, style.Success(fmt.Sprintf("%1.f", trustFactor.value)), style.Success(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
+		printFunc(format, trustFactorName, style.Success(fmt.Sprintf("%1.f", trustFactor.value)), style.Success(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	}
 }
 
@@ -99,11 +112,11 @@ func printPercentile(percentile float64, trustFactor trustFactor) {
 	format = tabulateFormat(format, fmt.Sprintf("%1.f", trustFactor.value), secondColumnLength)
 
 	if trustFactor.trustPercent < 0.5 {
-		disgo.Infof(format, trustFactorName, style.Failure(fmt.Sprintf("%1.f", trustFactor.value)), style.Failure(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
+		printFunc(format, trustFactorName, style.Failure(fmt.Sprintf("%1.f", trustFactor.value)), style.Failure(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	} else if trustFactor.trustPercent < 0.75 {
-		disgo.Infof(format, trustFactorName, style.Important(fmt.Sprintf("%1.f", trustFactor.value)), style.Important(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
+		printFunc(format, trustFactorName, style.Important(fmt.Sprintf("%1.f", trustFactor.value)), style.Important(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	} else {
-		disgo.Infof(format, trustFactorName, style.Success(fmt.Sprintf("%1.f", trustFactor.value)), style.Success(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
+		printFunc(format, trustFactorName, style.Success(fmt.Sprintf("%1.f", trustFactor.value)), style.Success(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	}
 }
 
@@ -114,11 +127,11 @@ func printResult(trustFactorName string, trustFactor trustFactor) {
 	underline := generateUnderline(firstColumnLength + secondColumnLength + 8)
 
 	if trustFactor.trustPercent < 0.5 {
-		disgo.Infof(format, underline, trustFactorName, style.Failure(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
+		printFunc(format, underline, trustFactorName, style.Failure(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	} else if trustFactor.trustPercent < 0.75 {
-		disgo.Infof(format, underline, trustFactorName, style.Important(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
+		printFunc(format, underline, trustFactorName, style.Important(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	} else {
-		disgo.Infof(format, underline, trustFactorName, style.Success(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
+		printFunc(format, underline, trustFactorName, style.Success(fmt.Sprintf("%4.f%%", trustFactor.trustPercent*100)))
 	}
 }
 

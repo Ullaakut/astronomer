@@ -15,7 +15,7 @@ func parseArguments() error {
 	viper.SetEnvPrefix("astronomer")
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 
-	pflag.BoolP("verbose", "", false, "Show extra logs (including comparative reports)")
+	pflag.BoolP("verbose", "v", false, "Show extra logs (including comparative reports)")
 	pflag.BoolP("all", "a", false, "Force astronomer to scall every stargazer of the repository (overrides --stars)")
 	pflag.UintP("stars", "s", 1000, "Maxmimum amount of stars to scan, if fast mode is enabled")
 	pflag.StringP("cachedir", "c", "./data", "Set the directory in which to store cache data")
@@ -39,13 +39,13 @@ func parseArguments() error {
 }
 
 func main() {
-	disgo.SetTerminalOptions(disgo.WithColors(true), disgo.WithDebug(viper.GetBool("verbose")))
-
 	err := parseArguments()
 	if err != nil {
 		disgo.Errorln(style.Failure(style.SymbolCross, err))
 		os.Exit(1)
 	}
+
+	disgo.SetTerminalOptions(disgo.WithColors(true), disgo.WithDebug(viper.GetBool("verbose")))
 
 	repository := pflag.Arg(0)
 
@@ -90,9 +90,8 @@ func main() {
 }
 
 func detectFakeStars(ctx context) error {
-	disgo.SetTerminalOptions(disgo.WithColors(true), disgo.WithDebug(true))
-
 	disgo.Infof("Beginning fetching process for repository %s/%s\n", ctx.repoOwner, ctx.repoName)
+
 	cursors, totalUsers, err := fetchStargazers(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to query stargazer data: %s", err)
@@ -121,7 +120,7 @@ func detectFakeStars(ctx context) error {
 		return fmt.Errorf("unable to compute trust report: %v", err)
 	}
 
-	renderReport(report)
+	renderReport(report, false)
 
 	disgo.Infof("%s Analysis successful. %d users computed.\n", style.Success(style.SymbolCheck), len(users))
 

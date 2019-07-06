@@ -317,6 +317,7 @@ func setupProgressBar(pages int) *mpb.Bar {
 			decor.Elapsed(decor.ET_STYLE_GO),
 			decor.Name(" Progress: "),
 			decor.Percentage()),
+		mpb.BarClearOnComplete(),
 	)
 
 	return bar

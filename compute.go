@@ -137,9 +137,9 @@ func buildComparativeReport(trustData map[factorName][]float64) (*trustReport, e
 		return nil, err
 	}
 
-	disgo.Infoln(style.Important("First 200 stargazers"))
+	disgo.Debugln(style.Important("First 200 stargazers"))
 
-	renderReport(firstStarsReport)
+	renderReport(firstStarsReport, true)
 
 	// Compute another trust report for the random stargazers.
 	currentStarsReport, err := buildReport(currentStarsTrust)
@@ -147,9 +147,9 @@ func buildComparativeReport(trustData map[factorName][]float64) (*trustReport, e
 		return nil, err
 	}
 
-	disgo.Infoln(style.Important(len(currentStarsTrust[contributionScoreFactor]), " random stargazers"))
+	disgo.Debugln(style.Important(len(currentStarsTrust[contributionScoreFactor]), " random stargazers"))
 
-	renderReport(currentStarsReport)
+	renderReport(currentStarsReport, true)
 
 	// Build comparative report using data from both sets.
 	for _, factor := range factors {
