@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/ullaakut/astronomer/pkg/context"
 	"github.com/ullaakut/astronomer/pkg/gql"
-	"github.com/ullaakut/astronomer/pkg/server"
+	"github.com/ullaakut/astronomer/pkg/signature"
 	"github.com/ullaakut/astronomer/pkg/trust"
 	"github.com/ullaakut/disgo"
 	"github.com/ullaakut/disgo/style"
@@ -114,7 +114,7 @@ func detectFakeStars(ctx *context.Context) error {
 
 	trust.Render(report, true)
 
-	err = server.SendReport(report)
+	err = signature.SendReport(report)
 	if err != nil {
 		return fmt.Errorf("unable to send trust report: %v", err)
 	}
