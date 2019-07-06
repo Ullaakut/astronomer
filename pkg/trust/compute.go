@@ -45,14 +45,14 @@ func Compute(ctx *context.Context, users []gql.User) (*Report, error) {
 		}
 
 		// Gather all contribution data and account ages.
-		trustData[privateContributionFactor] = append(trustData[privateContributionFactor], float64(users[idx].Contributions.PrivateContributions))
-		trustData[issueContributionFactor] = append(trustData[issueContributionFactor], float64(users[idx].Contributions.TotalIssueContributions))
-		trustData[commitContributionFactor] = append(trustData[commitContributionFactor], float64(users[idx].Contributions.TotalCommitContributions))
-		trustData[repoContributionFactor] = append(trustData[repoContributionFactor], float64(users[idx].Contributions.TotalRepositoryContributions))
-		trustData[prContributionFactor] = append(trustData[prContributionFactor], float64(users[idx].Contributions.TotalPullRequestContributions))
-		trustData[prReviewContributionFactor] = append(trustData[prReviewContributionFactor], float64(users[idx].Contributions.TotalPullRequestReviewContributions))
-		trustData[accountAgeFactor] = append(trustData[accountAgeFactor], users[idx].DaysOld())
-		trustData[contributionScoreFactor] = append(trustData[contributionScoreFactor], contributionScore)
+		trustData[PrivateContributionFactor] = append(trustData[PrivateContributionFactor], float64(users[idx].Contributions.PrivateContributions))
+		trustData[IssueContributionFactor] = append(trustData[IssueContributionFactor], float64(users[idx].Contributions.TotalIssueContributions))
+		trustData[CommitContributionFactor] = append(trustData[CommitContributionFactor], float64(users[idx].Contributions.TotalCommitContributions))
+		trustData[RepoContributionFactor] = append(trustData[RepoContributionFactor], float64(users[idx].Contributions.TotalRepositoryContributions))
+		trustData[PRContributionFactor] = append(trustData[PRContributionFactor], float64(users[idx].Contributions.TotalPullRequestContributions))
+		trustData[PRReviewContributionFactor] = append(trustData[PRReviewContributionFactor], float64(users[idx].Contributions.TotalPullRequestReviewContributions))
+		trustData[AccountAgeFactor] = append(trustData[AccountAgeFactor], users[idx].DaysOld())
+		trustData[ContributionScoreFactor] = append(trustData[ContributionScoreFactor], contributionScore)
 	}
 
 	disgo.StartStepf("Building trust report")
@@ -87,12 +87,12 @@ func buildReport(trustData map[FactorName][]float64) (*Report, error) {
 
 	// Only compute percentiles if  there are enough stargazers to be
 	// able to compute every fifth percentile.
-	if len(trustData[contributionScoreFactor]) > 20 {
+	if len(trustData[ContributionScoreFactor]) > 20 {
 		for _, percentile := range percentiles {
 			// Error is ignored on purpose.
 			pctl, _ := strconv.ParseFloat(string(percentile), 64)
 
-			value, err := stats.Percentile(trustData[contributionScoreFactor], pctl)
+			value, err := stats.Percentile(trustData[ContributionScoreFactor], pctl)
 			if err != nil {
 				return nil, fmt.Errorf("unable to compute score trust %1.fth percentile: %v", percentile, err)
 			}
@@ -122,7 +122,7 @@ func buildReport(trustData map[FactorName][]float64) (*Report, error) {
 		return nil, disgo.FailStepf("unable to compute overall trust: %v", err)
 	}
 
-	report.Factors[overallTrust] = Factor{
+	report.Factors[Overall] = Factor{
 		TrustPercent: trust,
 	}
 
@@ -155,7 +155,7 @@ func buildComparativeReport(trustData map[FactorName][]float64) (*Report, error)
 		return nil, err
 	}
 
-	disgo.Debugln(style.Important(len(currentStarsTrust[contributionScoreFactor]), " random stargazers"))
+	disgo.Debugln(style.Important(len(currentStarsTrust[ContributionScoreFactor]), " random stargazers"))
 
 	Render(currentStarsReport, false)
 
@@ -192,7 +192,7 @@ func buildComparativeReport(trustData map[FactorName][]float64) (*Report, error)
 		return nil, disgo.FailStepf("unable to compute overall trust: %v", err)
 	}
 
-	report.Factors[overallTrust] = Factor{
+	report.Factors[Overall] = Factor{
 		TrustPercent: trust,
 	}
 
@@ -201,7 +201,7 @@ func buildComparativeReport(trustData map[FactorName][]float64) (*Report, error)
 
 // splitTrustData split a trust data map between first and random stargazers.
 func splitTrustData(trustData map[FactorName][]float64) (first, current map[FactorName][]float64) {
-	total := len(trustData[contributionScoreFactor])
+	total := len(trustData[ContributionScoreFactor])
 
 	// Compute first stars.
 	first = make(map[FactorName][]float64)

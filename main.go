@@ -114,7 +114,7 @@ func detectFakeStars(ctx *context.Context) error {
 
 	trust.Render(report, true)
 
-	err = signature.SendReport(report)
+	err = signature.SendReport(ctx, report)
 	if err != nil {
 		return fmt.Errorf("unable to send trust report: %v", err)
 	}

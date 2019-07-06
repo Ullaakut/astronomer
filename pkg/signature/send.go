@@ -10,9 +10,9 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
+	"github.com/ullaakut/astronomer/pkg/context"
 	"github.com/ullaakut/astronomer/pkg/trust"
 	"github.com/ullaakut/disgo"
 )
@@ -20,18 +20,23 @@ import (
 type SignedReport struct {
 	*trust.Report
 
+	RepositoryOwner string
+	RepositoryName  string
+
 	Signature []byte
 }
 
-func SendReport(report *trust.Report) error {
+func SendReport(ctx *context.Context, report *trust.Report) error {
 	signature, err := signReport(report)
 	if err != nil {
 		return err
 	}
 
 	return sendReport(SignedReport{
-		Report:    report,
-		Signature: signature,
+		Report:          report,
+		RepositoryOwner: ctx.RepoOwner,
+		RepositoryName:  ctx.RepoName,
+		Signature:       signature,
 	})
 }
 
@@ -43,14 +48,9 @@ func signReport(report *trust.Report) ([]byte, error) {
 
 	hashedReport := sha512.Sum512(data)
 
-	pemData, err := ioutil.ReadFile("key.pem")
-	if err != nil {
-		return nil, fmt.Errorf("unable to find private key: %v", err)
-	}
-
-	keyBlock, _ := pem.Decode(pemData)
-	if err != nil {
-		return nil, fmt.Errorf("unable to decode private key: %v", err)
+	keyBlock, rest := pem.Decode([]byte(pemData))
+	if len(rest) != 0 {
+		return nil, fmt.Errorf("unable to decode private key: %s", pemData)
 	}
 
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
@@ -85,3 +85,5 @@ func sendReport(report SignedReport) error {
 
 	return nil
 }
+
+var pemData = `👀`

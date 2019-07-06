@@ -17,7 +17,7 @@ const (
 	factorsFormat = "%s:<TAB>%s<TAB>%s\n"
 
 	// > Overall trust:                                      76%
-	overallTrustFormat = "%s\n%s:<TAB>%s\n"
+	OverallTrustFormat = "%s\n%s:<TAB>%s\n"
 
 	// Length of the `Averages` column.
 	firstColumnLength = 35
@@ -53,7 +53,7 @@ func Render(report *Report, info bool) {
 		}
 	}
 
-	printResult(info, "Overall trust", report.Factors[overallTrust])
+	printResult(info, "Overall trust", report.Factors[Overall])
 }
 
 // printHeader prints the header containing each category name and underlines them.
@@ -109,7 +109,7 @@ func printPercentile(info bool, percentile Percentile, factor Factor) {
 // printResult prints the overall result in the following format:
 // FactorName:                                    Trust%
 func printResult(info bool, factorName string, factor Factor) {
-	format := tabulateFormat(overallTrustFormat, factorName, firstColumnLength+secondColumnLength+1)
+	format := tabulateFormat(OverallTrustFormat, factorName, firstColumnLength+secondColumnLength+1)
 	underline := generateUnderline(firstColumnLength + secondColumnLength + 8)
 
 	if factor.TrustPercent < 0.5 {
