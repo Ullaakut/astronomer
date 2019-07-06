@@ -1,4 +1,4 @@
-package main
+package gql
 
 import (
 	"time"
@@ -65,6 +65,25 @@ const (
 		}"}`
 )
 
+// User represents a github user who starred a repository.
+type User struct {
+	Login         string        `json:"login"`
+	CreatedAt     string        `json:"createdAt"`
+	Contributions contributions `json:"contributionsCollection"`
+
+	YearlyContributions map[int]int
+}
+
+// DaysOld returns the amount of day since this user created their account.
+func (u User) DaysOld() float64 {
+	creationDate, err := time.Parse(iso8601Format, u.CreatedAt)
+	if err != nil {
+		disgo.Errorln("Unexpected date time format from GraphQL API:", err)
+	}
+
+	return time.Since(creationDate).Hours() / 24
+}
+
 type listStargazersResponse struct {
 	response `json:"data"`
 
@@ -99,7 +118,7 @@ type repository struct {
 }
 
 type stargazers struct {
-	Users []user   `json:"nodes"`
+	Users []User   `json:"nodes"`
 	Meta  metaData `json:"edges"`
 }
 
@@ -119,23 +138,6 @@ func (m metaData) cursor() string {
 
 type meta struct {
 	Cursor string `json:"cursor"`
-}
-
-type user struct {
-	Login         string        `json:"login"`
-	CreatedAt     string        `json:"createdAt"`
-	Contributions contributions `json:"contributionsCollection"`
-
-	yearlyContributions map[int]int
-}
-
-func (u user) daysOld() float64 {
-	creationDate, err := time.Parse(iso8601Format, u.CreatedAt)
-	if err != nil {
-		disgo.Errorln("Unexpected date time format from GraphQL API:", err)
-	}
-
-	return time.Since(creationDate).Hours() / 24
 }
 
 type contributions struct {

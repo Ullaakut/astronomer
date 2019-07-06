@@ -1,4 +1,4 @@
-package main
+package gql
 
 import (
 	"bytes"
@@ -11,13 +11,14 @@ import (
 	"strings"
 
 	"github.com/kennygrant/sanitize"
+	"github.com/ullaakut/astronomer/pkg/context"
 )
 
 // getCache searches the cache directory for a file matching the
 // supplied request's URL. If found, the file contains a cached copy
 // of the HTTP response. The contents are read into an http.Response
 // object and returned.
-func getCache(ctx context, req *http.Request, pagination string) (*http.Response, error) {
+func getCache(ctx *context.Context, req *http.Request, pagination string) (*http.Response, error) {
 	filename := cacheEntryFilename(ctx, req.URL.String()+pagination)
 	pathToCreate := path.Dir(filename)
 
@@ -48,7 +49,7 @@ func readCachedResponse(filename string, req *http.Request) (*http.Response, err
 }
 
 // putCache puts the supplied http.Response into the cache.
-func putCache(ctx context, req *http.Request, pagination string, body []byte) error {
+func putCache(ctx *context.Context, req *http.Request, pagination string, body []byte) error {
 	filename := cacheEntryFilename(ctx, req.URL.String()+pagination)
 	f, err := os.Create(filename)
 	if err != nil {
@@ -71,9 +72,9 @@ func putCache(ctx context, req *http.Request, pagination string, body []byte) er
 
 // cacheEntryFilename creates a filename-safe name in a subdirectory
 // of the configured cache dir, with any access token stripped out.
-func cacheEntryFilename(ctx context, url string) string {
-	newURL := strings.Replace(url, fmt.Sprintf("access_token=%s", ctx.githubToken), "", 1)
-	return filepath.Join(ctx.cacheDirectoryPath, ctx.repoOwner, ctx.repoName, sanitize.BaseName(newURL))
+func cacheEntryFilename(ctx *context.Context, url string) string {
+	newURL := strings.Replace(url, fmt.Sprintf("access_token=%s", ctx.GithubToken), "", 1)
+	return filepath.Join(ctx.CacheDirectoryPath, ctx.RepoOwner, ctx.RepoName, sanitize.BaseName(newURL))
 }
 
 // listilePagination generates the pagination to append to the cache file names

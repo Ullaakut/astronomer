@@ -1,9 +1,10 @@
-package main
+package gql
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/ullaakut/astronomer/pkg/context"
 )
 
 func TestBuildRequestBody(t *testing.T) {
@@ -35,9 +36,9 @@ func TestBuildRequestBody(t *testing.T) {
 
 	for description, test := range tests {
 		t.Run(description, func(t *testing.T) {
-			ctx := context{
-				repoOwner: test.repoOwner,
-				repoName:  test.repoName,
+			ctx := &context.Context{
+				RepoOwner: test.repoOwner,
+				RepoName:  test.repoName,
 			}
 
 			requestBody := buildRequestBody(ctx, test.baseRequest, test.pagination)
@@ -49,14 +50,14 @@ func TestBuildRequestBody(t *testing.T) {
 
 func TestGetCursors(t *testing.T) {
 	sg := stargazers{
-		Users: []user{{Login: "titi"}, {Login: "toto"}, {Login: "tete"}, {Login: "tata"}, {Login: "tutu"}},
+		Users: []User{{Login: "titi"}, {Login: "toto"}, {Login: "tete"}, {Login: "tata"}, {Login: "tutu"}},
 		Meta:  metaData{{Cursor: "titi"}, {Cursor: "toto"}, {Cursor: "tete"}, {Cursor: "tata"}, {Cursor: "tutu"}},
 	}
 
-	blacklistedStargazers := stargazers{
-		Users: []user{{Login: "jstrachan"}, {Login: "toto"}, {Login: "tete"}, {Login: "tata"}, {Login: "tutu"}},
-		Meta:  metaData{{Cursor: "jstrachan"}, {Cursor: "toto"}, {Cursor: "tete"}, {Cursor: "tata"}, {Cursor: "tutu"}},
-	}
+	// blacklistedStargazers := stargazers{
+	// 	Users: []User{{Login: "jstrachan"}, {Login: "toto"}, {Login: "tete"}, {Login: "tata"}, {Login: "tutu"}},
+	// 	Meta:  metaData{{Cursor: "jstrachan"}, {Cursor: "toto"}, {Cursor: "tete"}, {Cursor: "tata"}, {Cursor: "tutu"}},
+	// }
 
 	tests := map[string]struct {
 		stargazers []stargazers
@@ -124,25 +125,25 @@ func TestGetCursors(t *testing.T) {
 
 			expectedCursors: []string{"tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu", "tutu"},
 		},
-		"blacklisted stargazers should dcause page skips": {
-			stargazers: []stargazers{
-				sg, sg, sg, sg, sg, sg, blacklistedStargazers, sg,
-				sg, sg, sg, sg, sg, sg, sg, sg,
-				sg, sg, sg, sg, sg, sg, sg, sg,
-				sg, sg, sg, sg, sg, sg, sg, sg,
-			},
-			totalUsers: 160,
-			starLimit:  200,
+		// "blacklisted stargazers should dcause page skips": {
+		// 	stargazers: []stargazers{
+		// 		sg, sg, sg, sg, sg, sg, blacklistedStargazers, sg,
+		// 		sg, sg, sg, sg, sg, sg, sg, sg,
+		// 		sg, sg, sg, sg, sg, sg, sg, sg,
+		// 		sg, sg, sg, sg, sg, sg, sg, sg,
+		// 	},
+		// 	totalUsers: 160,
+		// 	starLimit:  200,
 
-			expectedCursors: []string{"tutu", "tutu", "tutu", "tutu", "tutu", "tutu"},
-		},
+		// 	expectedCursors: []string{"tutu", "tutu", "tutu", "tutu", "tutu", "tutu"},
+		// },
 	}
 
 	for description, test := range tests {
 		t.Run(description, func(t *testing.T) {
-			ctx := context{
-				scanAll: test.scanAll,
-				stars:   test.starLimit,
+			ctx := &context.Context{
+				ScanAll: test.scanAll,
+				Stars:   test.starLimit,
 			}
 
 			cursors := getCursors(ctx, test.stargazers, test.totalUsers)
@@ -154,11 +155,11 @@ func TestGetCursors(t *testing.T) {
 
 func TestUpdateUsers(t *testing.T) {
 	tests := map[string]struct {
-		users    []user
+		users    []User
 		response listStargazersResponse
 		year     int
 
-		expectedUsers []user
+		expectedUsers []User
 	}{
 		"nil users": {
 			users: nil,
@@ -166,7 +167,7 @@ func TestUpdateUsers(t *testing.T) {
 				response: response{
 					Repository: repository{
 						Stargazers: stargazers{
-							Users: []user{
+							Users: []User{
 								{Login: "titi", Contributions: contributions{
 									PrivateContributions: 84,
 									ContributionCalendar: contributionCalendar{
@@ -186,13 +187,13 @@ func TestUpdateUsers(t *testing.T) {
 			},
 			year: 2019,
 
-			expectedUsers: []user{
+			expectedUsers: []User{
 				{Login: "titi", Contributions: contributions{
 					PrivateContributions: 84,
 					ContributionCalendar: contributionCalendar{
 						TotalContributions: 42,
 					},
-				}, yearlyContributions: map[int]int{
+				}, YearlyContributions: map[int]int{
 					2019: 126,
 				}},
 				{Login: "toto", Contributions: contributions{
@@ -200,19 +201,19 @@ func TestUpdateUsers(t *testing.T) {
 					ContributionCalendar: contributionCalendar{
 						TotalContributions: 67,
 					},
-				}, yearlyContributions: map[int]int{
+				}, YearlyContributions: map[int]int{
 					2019: 88,
 				}},
 			},
 		},
 		"update already existing users": {
-			users: []user{
+			users: []User{
 				{Login: "titi", Contributions: contributions{
 					PrivateContributions: 84,
 					ContributionCalendar: contributionCalendar{
 						TotalContributions: 42,
 					},
-				}, yearlyContributions: map[int]int{
+				}, YearlyContributions: map[int]int{
 					2019: 126,
 				}},
 				{Login: "toto", Contributions: contributions{
@@ -220,7 +221,7 @@ func TestUpdateUsers(t *testing.T) {
 					ContributionCalendar: contributionCalendar{
 						TotalContributions: 67,
 					},
-				}, yearlyContributions: map[int]int{
+				}, YearlyContributions: map[int]int{
 					2019: 88,
 				}},
 			},
@@ -228,7 +229,7 @@ func TestUpdateUsers(t *testing.T) {
 				response: response{
 					Repository: repository{
 						Stargazers: stargazers{
-							Users: []user{
+							Users: []User{
 								{Login: "titi", Contributions: contributions{
 									PrivateContributions: 84,
 									ContributionCalendar: contributionCalendar{
@@ -248,13 +249,13 @@ func TestUpdateUsers(t *testing.T) {
 			},
 			year: 2018,
 
-			expectedUsers: []user{
+			expectedUsers: []User{
 				{Login: "titi", Contributions: contributions{
 					PrivateContributions: 168,
 					ContributionCalendar: contributionCalendar{
 						TotalContributions: 42,
 					},
-				}, yearlyContributions: map[int]int{
+				}, YearlyContributions: map[int]int{
 					2019: 126,
 					2018: 126,
 				}},
@@ -263,7 +264,7 @@ func TestUpdateUsers(t *testing.T) {
 					ContributionCalendar: contributionCalendar{
 						TotalContributions: 67,
 					},
-				}, yearlyContributions: map[int]int{
+				}, YearlyContributions: map[int]int{
 					2019: 88,
 					2018: 88,
 				}},

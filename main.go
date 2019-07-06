@@ -7,6 +7,10 @@ import (
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"github.com/ullaakut/astronomer/pkg/context"
+	"github.com/ullaakut/astronomer/pkg/gql"
+	"github.com/ullaakut/astronomer/pkg/server"
+	"github.com/ullaakut/astronomer/pkg/trust"
 	"github.com/ullaakut/disgo"
 	"github.com/ullaakut/disgo/style"
 )
@@ -62,25 +66,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	stars := viper.GetUint("stars")
-	if stars < uint(contribPagination) {
-		disgo.Errorln(style.Failure(style.SymbolCross, " unable to compute less stars than the amount fetched per page. Please set stars to at least ", contribPagination))
-		os.Exit(1)
-	}
-
-	// Round amount of stars to get according to pagination.
-	if stars%contribPagination != 0 {
-		stars = stars - stars%contribPagination
-		disgo.Errorln(style.Failure("Rounding amount of stars to get to ", stars, " instead of ", viper.GetUint("stars"), " to match pagination"))
-	}
-
-	ctx := context{
-		repoOwner:          repoInfo[0],
-		repoName:           repoInfo[1],
-		githubToken:        token,
-		stars:              stars,
-		cacheDirectoryPath: viper.GetString("cachedir"),
-		scanAll:            viper.GetBool("all"),
+	ctx := &context.Context{
+		RepoOwner:          repoInfo[0],
+		RepoName:           repoInfo[1],
+		GithubToken:        token,
+		Stars:              viper.GetUint("stars"),
+		CacheDirectoryPath: viper.GetString("cachedir"),
+		ScanAll:            viper.GetBool("all"),
+		Verbose:            viper.GetBool("verbose"),
 	}
 
 	if err := detectFakeStars(ctx); err != nil {
@@ -89,10 +82,10 @@ func main() {
 	}
 }
 
-func detectFakeStars(ctx context) error {
-	disgo.Infof("Beginning fetching process for repository %s/%s\n", ctx.repoOwner, ctx.repoName)
+func detectFakeStars(ctx *context.Context) error {
+	disgo.Infof("Beginning fetching process for repository %s/%s\n", ctx.RepoOwner, ctx.RepoName)
 
-	cursors, totalUsers, err := fetchStargazers(ctx)
+	cursors, totalUsers, err := gql.FetchStargazers(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to query stargazer data: %s", err)
 	}
@@ -103,24 +96,28 @@ func detectFakeStars(ctx context) error {
 
 	// For now, we only fetch contributions until 2013. It will be configurable later on
 	// once the algorithm is more accurate and more data has been fetched.
-	if !ctx.scanAll && totalUsers > ctx.stars {
-		disgo.Infof("Fetching contributions for %d users up to year %d\n", ctx.stars, 2013)
+	if !ctx.ScanAll && totalUsers > ctx.Stars {
+		disgo.Infof("Fetching contributions for %d users up to year %d\n", ctx.Stars, 2013)
 	} else {
 		disgo.Infof("Fetching contributions for %d users up to year %d\n", totalUsers, 2013)
 	}
 
-	users, err := fetchContributions(ctx, cursors, 2013)
+	users, err := gql.FetchContributions(ctx, cursors, 2013)
 	if err != nil {
 		return fmt.Errorf("failed to query stargazer data: %s", err)
 	}
 
-	report, err := computeTrustReport(ctx, users)
+	report, err := trust.Compute(ctx, users)
 	if err != nil {
-		disgo.Errorf("Unable to compute trust report %+v\n", report)
 		return fmt.Errorf("unable to compute trust report: %v", err)
 	}
 
-	renderReport(report, false)
+	trust.Render(report, true)
+
+	err = server.SendReport(report)
+	if err != nil {
+		return fmt.Errorf("unable to send trust report: %v", err)
+	}
 
 	disgo.Infof("%s Analysis successful. %d users computed.\n", style.Success(style.SymbolCheck), len(users))
 

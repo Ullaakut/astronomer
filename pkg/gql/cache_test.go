@@ -1,17 +1,18 @@
-package main
+package gql
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/ullaakut/astronomer/pkg/context"
 )
 
 func TestCacheEntryFilename(t *testing.T) {
-	ctx := context{
-		repoOwner:          "ullaakut",
-		repoName:           "astronomer",
-		githubToken:        "fakeToken",
-		cacheDirectoryPath: "./data",
+	ctx := &context.Context{
+		RepoOwner:          "ullaakut",
+		RepoName:           "astronomer",
+		GithubToken:        "fakeToken",
+		CacheDirectoryPath: "./data",
 	}
 
 	sanitizedFilename := cacheEntryFilename(ctx, "https://fakeapi.com/graphql?access_token=fakeToken-1-2019")
