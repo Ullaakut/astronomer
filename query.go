@@ -113,7 +113,7 @@ func fetchStargazers(ctx context) (cursors []string, totalUsers uint, err error)
 		// or until the limit of 20 attempts is reached.
 		if resp == nil {
 			var attempts int
-			backoff.Retry(func() error {
+			err = backoff.Retry(func() error {
 				// If we reached 20 attempts, give up.
 				attempts++
 				if attempts >= 20 {
@@ -155,7 +155,7 @@ func fetchStargazers(ctx context) (cursors []string, totalUsers uint, err error)
 			}, backoff.NewConstantBackOff(15*time.Second))
 		}
 
-		if response == nil {
+		if response == nil || err != nil {
 			return nil, 0, fmt.Errorf("failed to fetch stargazers. last body recieved: %s", responseBody)
 		}
 
@@ -422,7 +422,7 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 			// or until the limit of 20 attempts is reached.
 			if !cachedFileFound {
 				var attempts int
-				backoff.Retry(func() error {
+				err = backoff.Retry(func() error {
 					// If we reached 20 attempts, give up.
 					attempts++
 					if attempts >= 20 {
@@ -466,7 +466,7 @@ func fetchContributions(ctx context, cursors []string, untilYear int) ([]user, e
 				}, backoff.NewConstantBackOff(15*time.Second))
 			}
 
-			if response == nil {
+			if response == nil || err != nil {
 				return nil, fmt.Errorf("failed to fetch user contributions. failed at cursor %s", cursors[page-2])
 			}
 
@@ -524,7 +524,7 @@ func parseResponse(resp *http.Response) (*listStargazersResponse, []byte, error)
 
 	if len(response.Errors) != 0 {
 		resp.Body.Close()
-		return nil, responseBody, fmt.Errorf("error while querying user data: %v [%s:%s]", response.Errors[0].Message, response.Errors[0].Extensions.argumentName, response.Errors[0].Extensions.name)
+		return nil, responseBody, fmt.Errorf("error while querying user data: %v [%s:%s]", response.Errors[0].Message, response.Errors[0].Extensions.ArgumentName, response.Errors[0].Extensions.Name)
 	}
 
 	return &response, responseBody, nil
