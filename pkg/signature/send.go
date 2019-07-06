@@ -1,4 +1,4 @@
-package server
+package signature
 
 import (
 	"bytes"
@@ -24,37 +24,46 @@ type SignedReport struct {
 }
 
 func SendReport(report *trust.Report) error {
-	data, err := json.Marshal(report)
+	signature, err := signReport(report)
 	if err != nil {
-		return fmt.Errorf("unable to marshal trust report: %v", err)
-	}
-
-	hashedReport := sha512.Sum512(data)
-
-	pemData, err := ioutil.ReadFile("key.pem")
-	if err != nil {
-		return fmt.Errorf("unable to find private key: %v", err)
-	}
-
-	keyBlock, _ := pem.Decode(pemData)
-	if err != nil {
-		return fmt.Errorf("unable to decode private key: %v", err)
-	}
-
-	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
-	if err != nil {
-		return fmt.Errorf("unable to parse private key: %v", err)
-	}
-
-	signature, err := rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA512, hashedReport[:])
-	if err != nil {
-		return fmt.Errorf("unable to sign trust report: %v", err)
+		return err
 	}
 
 	return sendReport(SignedReport{
 		Report:    report,
 		Signature: signature,
 	})
+}
+
+func signReport(report *trust.Report) ([]byte, error) {
+	data, err := json.Marshal(report)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal trust report: %v", err)
+	}
+
+	hashedReport := sha512.Sum512(data)
+
+	pemData, err := ioutil.ReadFile("key.pem")
+	if err != nil {
+		return nil, fmt.Errorf("unable to find private key: %v", err)
+	}
+
+	keyBlock, _ := pem.Decode(pemData)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode private key: %v", err)
+	}
+
+	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse private key: %v", err)
+	}
+
+	signature, err := rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA512, hashedReport[:])
+	if err != nil {
+		return nil, fmt.Errorf("unable to sign trust report: %v", err)
+	}
+
+	return signature, nil
 }
 
 func sendReport(report SignedReport) error {
