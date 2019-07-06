@@ -1,25 +1,26 @@
-package main
+package trust
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/ullaakut/astronomer/pkg/context"
 )
 
 func TestBuildReport(t *testing.T) {
-	expectedFactors := map[factorName]trustFactor{
-		privateContributionFactor:  trustFactor{value: 2 * factorReferences[privateContributionFactor], trustPercent: 0.99},
-		issueContributionFactor:    trustFactor{value: 2 * factorReferences[issueContributionFactor], trustPercent: 0.99},
-		commitContributionFactor:   trustFactor{value: 2 * factorReferences[commitContributionFactor], trustPercent: 0.99},
-		repoContributionFactor:     trustFactor{value: 2 * factorReferences[repoContributionFactor], trustPercent: 0.99},
-		prContributionFactor:       trustFactor{value: 2 * factorReferences[prContributionFactor], trustPercent: 0.99},
-		prReviewContributionFactor: trustFactor{value: 2 * factorReferences[prReviewContributionFactor], trustPercent: 0.99},
-		accountAgeFactor:           trustFactor{value: 2 * factorReferences[accountAgeFactor], trustPercent: 0.99},
-		contributionScoreFactor:    trustFactor{value: 2 * factorReferences[contributionScoreFactor], trustPercent: 0.99},
+	expectedFactors := map[FactorName]Factor{
+		privateContributionFactor:  Factor{Value: 2 * factorReferences[privateContributionFactor], TrustPercent: 0.99},
+		issueContributionFactor:    Factor{Value: 2 * factorReferences[issueContributionFactor], TrustPercent: 0.99},
+		commitContributionFactor:   Factor{Value: 2 * factorReferences[commitContributionFactor], TrustPercent: 0.99},
+		repoContributionFactor:     Factor{Value: 2 * factorReferences[repoContributionFactor], TrustPercent: 0.99},
+		prContributionFactor:       Factor{Value: 2 * factorReferences[prContributionFactor], TrustPercent: 0.99},
+		prReviewContributionFactor: Factor{Value: 2 * factorReferences[prReviewContributionFactor], TrustPercent: 0.99},
+		accountAgeFactor:           Factor{Value: 2 * factorReferences[accountAgeFactor], TrustPercent: 0.99},
+		contributionScoreFactor:    Factor{Value: 2 * factorReferences[contributionScoreFactor], TrustPercent: 0.99},
 	}
 
-	trustData := map[factorName][]float64{
+	trustData := map[FactorName][]float64{
 		privateContributionFactor:  []float64{0, 4 * factorReferences[privateContributionFactor], 2 * factorReferences[privateContributionFactor]},
 		issueContributionFactor:    []float64{0, 2 * factorReferences[issueContributionFactor], 4 * factorReferences[issueContributionFactor]},
 		commitContributionFactor:   []float64{0, 2 * factorReferences[commitContributionFactor], 4 * factorReferences[commitContributionFactor]},
@@ -30,11 +31,15 @@ func TestBuildReport(t *testing.T) {
 		contributionScoreFactor:    []float64{0, 2 * factorReferences[contributionScoreFactor], 4 * factorReferences[contributionScoreFactor]},
 	}
 
-	report, err := buildReport(trustData)
+	ctx := &context.Context{
+		Verbose: true,
+	}
+
+	report, err := buildReport(ctx, trustData)
 	require.NoError(t, err)
 	require.NotNil(t, report)
 
 	for factor, expectedTrust := range expectedFactors {
-		assert.Equal(t, expectedTrust, report.factors[factor], "unexpected value for factor %q", factor)
+		assert.Equal(t, expectedTrust, report.Factors[factor], "unexpected value for factor %q", factor)
 	}
 }
