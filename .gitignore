@@ -1,3 +1,6 @@
 data/
 dist/
 crossbuild.sh
+
+key.pem
+pub.pem
