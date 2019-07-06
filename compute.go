@@ -80,14 +80,13 @@ func buildReport(trustData map[factorName][]float64) (*trustReport, error) {
 		}
 	}
 
-	// Only compute percentiles if details are enabled and
-	// there are enough stargazers to be able to compute every
-	// fifth percentile.
+	// Only compute percentiles if  there are enough stargazers to be
+	// able to compute every fifth percentile.
 	if len(trustData[contributionScoreFactor]) > 20 {
 		for _, percentile := range percentiles {
 			value, err := stats.Percentile(trustData[contributionScoreFactor], percentile)
 			if err != nil {
-				return nil, fmt.Errorf("unable to compute score trust %2.fth percentile: %v", percentile, err)
+				return nil, fmt.Errorf("unable to compute score trust %1.fth percentile: %v", percentile, err)
 			}
 
 			report.percentiles[percentile] = trustFactor{
