@@ -79,23 +79,26 @@ Also, Astrolab will receive many improvements in the near future, in order to ga
 
 ## Examples
 
-<p align="left" style="margin-bottom: 0">
+<p align="left">
     <img width="65%" src="img/traefik.png">
 </p>
-<p align="left" style="margin-top: -20px">
-    <img style="margin-left:25%" src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fastronomer.ullaakut.eu%2Fshields%3Fowner%3Dcontainous%26name%3Dtraefik" />
+<p align="left">
+    &puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;
+    <img width="20%" src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fastronomer.ullaakut.eu%2Fshields%3Fowner%3Dcontainous%26name%3Dtraefik" />
 </p>
-<p align="right" style="margin-bottom: 0">
+<p align="right">
     <img width="65%" src="img/suspicious_repo.png">
 </p>
-<p align="right" style="margin-top: -20px">
-    <img style="margin-right:25%" src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fastronomer.ullaakut.eu%2Fshields%3Fowner%3Doperator996%26name%3Dyaocl" />
+<p align="right">
+    <img width="20%" src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fastronomer.ullaakut.eu%2Fshields%3Fowner%3Doperator996%26name%3Dyaocl" />
+    &puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;
 </p>
-<p align="left" style="margin-bottom: 0">
+<p align="left">
     <img width="65%" src="img/envoy.png">
 </p>
-<p align="left" style="margin-top: -20px">
-    <img style="margin-left:25%" src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fastronomer.ullaakut.eu%2Fshields%3Fowner%3Denvoyproxy%26name%3Denvoy" />
+<p align="left">
+    &puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;&puncsp;
+    <img width="20%" src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fastronomer.ullaakut.eu%2Fshields%3Fowner%3Denvoyproxy%26name%3Denvoy" />
 </p>
 
 ## Questions & Answers
