@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/ullaakut/astronomer/pkg/context"
 )
 
 func TestBuildReport(t *testing.T) {
@@ -31,11 +30,7 @@ func TestBuildReport(t *testing.T) {
 		ContributionScoreFactor:    []float64{0, 2 * factorReferences[ContributionScoreFactor], 4 * factorReferences[ContributionScoreFactor]},
 	}
 
-	ctx := &context.Context{
-		Verbose: true,
-	}
-
-	report, err := buildReport(ctx, trustData)
+	report, err := buildReport(trustData)
 	require.NoError(t, err)
 	require.NotNil(t, report)
 

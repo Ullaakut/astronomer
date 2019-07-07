@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ullaakut/astronomer/pkg/context"
 	"github.com/ullaakut/disgo"
 )
 
@@ -13,11 +12,7 @@ func TestPrintTrustFactor(t *testing.T) {
 	logger := &bytes.Buffer{}
 	disgo.SetTerminalOptions(disgo.WithColors(false), disgo.WithDefaultOutput(logger), disgo.WithErrorOutput(logger))
 
-	ctx := &context.Context{
-		Verbose: false,
-	}
-
-	printFactor(ctx, "test_name", Factor{
+	printFactor(true, "test_name", Factor{
 		Value:        42,
 		TrustPercent: 0.99,
 	})
@@ -29,27 +24,19 @@ func TestPrintPercentile(t *testing.T) {
 	logger := &bytes.Buffer{}
 	disgo.SetTerminalOptions(disgo.WithColors(false), disgo.WithDefaultOutput(logger), disgo.WithErrorOutput(logger))
 
-	ctx := &context.Context{
-		Verbose: false,
-	}
-
-	printPercentile(ctx, 42, Factor{
+	printPercentile(true, percentiles[0], Factor{
 		Value:        8484,
 		TrustPercent: 0.99,
 	})
 
-	assert.Contains(t, logger.String(), "42th percentile:                     8484              99%")
+	assert.Contains(t, logger.String(), "5th percentile:                      8484              99%")
 }
 
 func TestPrintResult(t *testing.T) {
 	logger := &bytes.Buffer{}
 	disgo.SetTerminalOptions(disgo.WithColors(false), disgo.WithDefaultOutput(logger), disgo.WithErrorOutput(logger))
 
-	ctx := &context.Context{
-		Verbose: false,
-	}
-
-	printResult(ctx, "test_name", Factor{
+	printResult(true, "test_name", Factor{
 		TrustPercent: 0.87,
 	})
 
@@ -61,11 +48,7 @@ func TestPrintHeader(t *testing.T) {
 	logger := &bytes.Buffer{}
 	disgo.SetTerminalOptions(disgo.WithColors(false), disgo.WithDefaultOutput(logger), disgo.WithErrorOutput(logger))
 
-	ctx := &context.Context{
-		Verbose: false,
-	}
-
-	printHeader(ctx)
+	printHeader(true)
 
 	assert.Contains(t, logger.String(), "Averages                             Score           Trust")
 	assert.Contains(t, logger.String(), "--------                             -----           -----")

@@ -106,7 +106,7 @@ func buildReport(trustData map[FactorName][]float64) (*Report, error) {
 
 			value, err := stats.Percentile(trustData[ContributionScoreFactor], pctl)
 			if err != nil {
-				return nil, fmt.Errorf("unable to compute score trust %1.fth percentile: %v", percentile, err)
+				return nil, fmt.Errorf("unable to compute score trust %sth percentile: %v", percentile, err)
 			}
 
 			report.Percentiles[percentile] = Factor{
