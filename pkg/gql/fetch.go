@@ -419,7 +419,7 @@ func getCursors(ctx *context.Context, sg []stargazers, totalUsers uint) []string
 
 	if ctx.ScanAll || totalUsers < ctx.Stars {
 		disgo.Infof("Selecting all %d remaining stargazers\n", totalUsers-200)
-		selectedCursors = append(selectedCursors, cursors[:len(cursors)-beginCursorAmount-1]...)
+		selectedCursors = append(selectedCursors, cursors[:len(cursors)-beginCursorAmount]...)
 	} else {
 		// endCursorAmount is the amount of cursors to fetch to get the random users.
 		endCursorAmount := totalCursorAmount - beginCursorAmount
