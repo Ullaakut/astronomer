@@ -129,7 +129,7 @@ Make sure to replace `<REPOSITORY_OWNER>` and `<REPOSITORY_NAME>` with the corre
 
 In order to be faster, Astronomer does not scan every single user in your repository. It instead scans the early stargazers of your repository and compares their trust levels to multiple slices of random stargazers of your repository. Those random stargazers can then sometimes be responsible for slight changes in the results, but they usually represent a difference of 1% to 3%, which is negligeable.
 
-If you want a very precise report of all of your stargazers, use the ``
+If you want a very precise report of all of your stargazers, use the `--all` option. This will scan all of your stargazer and completely remove the random factor.
 
 <br/>
 
