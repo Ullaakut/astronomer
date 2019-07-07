@@ -34,7 +34,9 @@ func printf(info bool, format string, s ...interface{}) {
 	}
 }
 
-// Render prints a report.
+// Render prints a report. If info is set to true, it prints it regardless
+// of the verbosity, while if info is set to false it will print it only
+// in verbose mode.
 func Render(report *Report, info bool) {
 	if report == nil {
 		disgo.Errorln(style.Failure(style.SymbolCross, " No report to render."))

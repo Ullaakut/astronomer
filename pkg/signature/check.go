@@ -13,6 +13,8 @@ import (
 	"fmt"
 )
 
+// Check verifies whether a report has been signed
+// with a legitimate version of Astronomer.
 func Check(report *SignedReport) error {
 	data, err := json.Marshal(report.Report)
 	if err != nil {

@@ -1,6 +1,7 @@
 package trust
 
-// Factors.
+// All of the factors taken into account by Astronomer
+// and shown in the report.
 const (
 	PrivateContributionFactor  FactorName = "Private contributions"
 	ContributionScoreFactor    FactorName = "Weighted contributions"
@@ -32,36 +33,36 @@ var (
 	// References are based on the average values of values typically
 	// found on popular repositories.
 	factorReferences = map[FactorName]float64{
-		PrivateContributionFactor:  600,
-		ContributionScoreFactor:    24000,
+		PrivateContributionFactor:  300,
+		ContributionScoreFactor:    18000,
 		IssueContributionFactor:    20,
 		CommitContributionFactor:   370,
 		RepoContributionFactor:     30,
 		PRContributionFactor:       20,
-		PRReviewContributionFactor: 10,
+		PRReviewContributionFactor: 8,
 		AccountAgeFactor:           1600,
 	}
 
 	percentileReferences = map[Percentile]float64{
-		"5":  10,
-		"10": 30,
-		"15": 65,
-		"20": 120,
-		"25": 230,
-		"30": 310,
-		"35": 520,
-		"40": 680,
-		"45": 990,
-		"50": 1450,
-		"55": 2150,
-		"60": 3230,
-		"65": 4870,
-		"70": 6480,
-		"75": 9830,
-		"80": 12020,
-		"85": 24110,
-		"90": 39970,
-		"95": 74670,
+		"5":  7,
+		"10": 22,
+		"15": 42,
+		"20": 98,
+		"25": 167,
+		"30": 286,
+		"35": 435,
+		"40": 515,
+		"45": 875,
+		"50": 1230,
+		"55": 1860,
+		"60": 2830,
+		"65": 4270,
+		"70": 5990,
+		"75": 8420,
+		"80": 10140,
+		"85": 19900,
+		"90": 33470,
+		"95": 59320,
 	}
 
 	// factorWeights represents the importance of each factor in

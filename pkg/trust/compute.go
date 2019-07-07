@@ -13,13 +13,25 @@ import (
 	"github.com/ullaakut/disgo/style"
 )
 
+// Factor represents one of the trust factors used to compte
+// the trust score for a repository.
 type Factor struct {
-	Value        float64
+	// The raw value of this factor.
+	Value float64
+
+	// The % of trust given to the value, compared
+	// to global references.
 	TrustPercent float64
 }
 
+// FactorName is a typed string representing a
+// Factor's name.
 type FactorName string
 
+// Percentile is a typed string representing
+// a percentile trust factor. It is a string
+// instead of a float to allow the `encoding/json`
+// package to marshal trust reports.
 type Percentile string
 
 // Report represents the result of the trust computation of a repository's
@@ -59,7 +71,7 @@ func Compute(ctx *context.Context, users []gql.User) (*Report, error) {
 
 	defer disgo.EndStep()
 
-	if ctx.Stars == uint(len(users)) {
+	if uint(len(users)) >= 200 {
 		return buildComparativeReport(trustData)
 	}
 
