@@ -11,7 +11,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"log"
 )
 
 func Check(report *SignedReport) error {
@@ -36,8 +35,6 @@ func Check(report *SignedReport) error {
 	if err != nil {
 		return fmt.Errorf("unable to sign trust report: %v", err)
 	}
-
-	log.Println(signature, "and", report.Signature, "don't match")
 
 	if !bytes.Equal(signature, report.Signature) {
 		return errors.New("signature doesn't match")

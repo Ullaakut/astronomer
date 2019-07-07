@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 
@@ -119,8 +120,11 @@ func detectFakeStars(ctx *context.Context) error {
 		return fmt.Errorf("unable to send trust report: %v", err)
 	}
 
-	disgo.Infof(style.Success(fmt.Sprintf("GitHub badge generated at https://img.shields.io/endpoint.svg?url=https%%3A%%2F%%2Fastrolab.ullaakut.eu%%2Fshields%%3Fowner%%3D%s%%26name%%3D%s&style=flat", ctx.RepoOwner, ctx.RepoName)))
-	disgo.Infof("%s Analysis successful. %d users computed.\n", style.Success(style.SymbolCheck), len(users))
+	disgo.Infof("\n%s Analysis successful. %d users computed.\n", style.Success(style.SymbolCheck), len(users))
+
+	badgeEndpoint := url.QueryEscape(fmt.Sprintf("https://astronomer.ullaakut.eu/shields?owner=%s&name=%s&style=flat", ctx.RepoOwner, ctx.RepoName))
+
+	disgo.Infof("GitHub badge available at https://img.shields.io/endpoint.svg?url=%s\n", badgeEndpoint)
 
 	return nil
 }
