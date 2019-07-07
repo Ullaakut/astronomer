@@ -72,7 +72,7 @@ func sendReport(report SignedReport) error {
 		return fmt.Errorf("unable to marshal signed report: %v", err)
 	}
 
-	response, err := http.Post("http://localhost", "application/json", bytes.NewReader(data))
+	response, err := http.Post("https://astronomer.ullaakut.eu", "application/json", bytes.NewReader(data))
 	if err != nil {
 		return fmt.Errorf("unable to send signed report to astronomer server: %v", err)
 	}

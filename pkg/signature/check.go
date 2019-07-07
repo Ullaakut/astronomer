@@ -11,7 +11,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"log"
 )
 
 func Check(report *SignedReport) error {
@@ -22,12 +22,7 @@ func Check(report *SignedReport) error {
 
 	hashedReport := sha512.Sum512(data)
 
-	pemData, err := ioutil.ReadFile("key.pem")
-	if err != nil {
-		return fmt.Errorf("unable to find private key: %v", err)
-	}
-
-	keyBlock, _ := pem.Decode(pemData)
+	keyBlock, _ := pem.Decode([]byte(pemData))
 	if err != nil {
 		return fmt.Errorf("unable to decode private key: %v", err)
 	}
@@ -41,6 +36,8 @@ func Check(report *SignedReport) error {
 	if err != nil {
 		return fmt.Errorf("unable to sign trust report: %v", err)
 	}
+
+	log.Println(signature, "and", report.Signature, "don't match")
 
 	if !bytes.Equal(signature, report.Signature) {
 		return errors.New("signature doesn't match")
