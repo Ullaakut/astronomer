@@ -24,8 +24,8 @@ func Check(report *SignedReport) error {
 	hashedReport := sha512.Sum512(data)
 
 	keyBlock, _ := pem.Decode([]byte(pemData))
-	if err != nil {
-		return fmt.Errorf("unable to decode private key: %v", err)
+	if keyBlock == nil {
+		return fmt.Errorf("unable to decode private key")
 	}
 
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
