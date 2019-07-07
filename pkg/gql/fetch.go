@@ -190,7 +190,7 @@ func FetchContributions(ctx *context.Context, cursors []string, untilYear int) (
 	requestBody := buildRequestBody(ctx, fetchContributionsRequest, contribPagination)
 	client := &http.Client{}
 
-	progressBar := setupProgressBar(len(cursors) + 1)
+	progressBar := setupProgressBar(len(cursors) + 2)
 
 	// If we are scanning only a portion of stargazers, the
 	// scan does not start with a page without a cursor.
@@ -208,6 +208,14 @@ func FetchContributions(ctx *context.Context, cursors []string, untilYear int) (
 	// Iterate on pages of user contributions, following the cursors generated
 	// in fetchStargazers.
 	for page := 1; page <= totalPages; page++ {
+		// HACK: The progress bar completely messes up the
+		// reports unless we clear it and wait before printing
+		// anything else. Need to figure out why.
+		if page == totalPages-1 {
+			progressBar.Abort(true)
+			time.Sleep(50 * time.Millisecond)
+		}
+
 		currentCursor := getCursor(cursors, page, isReverseOrder)
 
 		// If this isn't the first page, inject the cursor value.
@@ -474,7 +482,6 @@ func setupProgressBar(pages int) *mpb.Bar {
 			decor.Elapsed(decor.ET_STYLE_GO),
 			decor.Name(" Progress: "),
 			decor.Percentage()),
-		mpb.BarClearOnComplete(),
 	)
 
 	return bar
