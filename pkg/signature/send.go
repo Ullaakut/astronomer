@@ -17,6 +17,8 @@ import (
 	"github.com/ullaakut/disgo"
 )
 
+// SignedReport represents a report that has been signed
+// by a legitimate version of Astronomer.
 type SignedReport struct {
 	*trust.Report
 
@@ -26,6 +28,7 @@ type SignedReport struct {
 	Signature []byte
 }
 
+// SendReport signs a report and sends it to Astrolab.
 func SendReport(ctx *context.Context, report *trust.Report) error {
 	signature, err := signReport(report)
 	if err != nil {

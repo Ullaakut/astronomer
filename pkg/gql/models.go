@@ -65,7 +65,9 @@ const (
 		}"}`
 )
 
-// User represents a github user who starred a repository.
+// User represents a github user who starred a repository. It is
+// public because this model is the output of the Fetch methods of
+// this package.
 type User struct {
 	Login         string        `json:"login"`
 	CreatedAt     string        `json:"createdAt"`
@@ -74,7 +76,8 @@ type User struct {
 	YearlyContributions map[int]int
 }
 
-// DaysOld returns the amount of day since this user created their account.
+// DaysOld returns the amount of days since this user created their
+// GitHub account.
 func (u User) DaysOld() float64 {
 	creationDate, err := time.Parse(iso8601Format, u.CreatedAt)
 	if err != nil {

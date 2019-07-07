@@ -122,7 +122,7 @@ func detectFakeStars(ctx *context.Context) error {
 
 	disgo.Infof("\n%s Analysis successful. %d users computed.\n", style.Success(style.SymbolCheck), len(users))
 
-	badgeEndpoint := url.QueryEscape(fmt.Sprintf("https://astronomer.ullaakut.eu/shields?owner=%s&name=%s&style=flat", ctx.RepoOwner, ctx.RepoName))
+	badgeEndpoint := url.QueryEscape(fmt.Sprintf("https://astronomer.ullaakut.eu/shields?owner=%s&name=%s", ctx.RepoOwner, ctx.RepoName))
 
 	disgo.Infof("GitHub badge available at https://img.shields.io/endpoint.svg?url=%s\n", badgeEndpoint)
 

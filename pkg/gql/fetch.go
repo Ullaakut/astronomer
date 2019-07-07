@@ -401,7 +401,7 @@ func getCursors(ctx *context.Context, sg []stargazers, totalUsers uint) []string
 		}
 	}
 
-	if ctx.ScanAll || totalUsers < ctx.Stars || totalUsers < 200 {
+	if totalUsers <= 200 {
 		disgo.Infof("All %d stargazers will be scanned\n", totalUsers)
 		return cursors
 	}
@@ -417,11 +417,16 @@ func getCursors(ctx *context.Context, sg []stargazers, totalUsers uint) []string
 
 	selectedCursors = append(selectedCursors, cursors[len(cursors)-beginCursorAmount-1:len(cursors)-1]...)
 
-	// endCursorAmount is the amount of cursors to fetch to get the random users.
-	endCursorAmount := totalCursorAmount - beginCursorAmount
-	disgo.Infof("Selecting %d random stargazers out of %d\n", (endCursorAmount-1)*contribPagination, totalUsers)
+	if ctx.ScanAll || totalUsers < ctx.Stars {
+		disgo.Infof("Selecting all %d remaining stargazers\n", totalUsers-200)
+		selectedCursors = append(selectedCursors, cursors[:len(cursors)-beginCursorAmount-1]...)
+	} else {
+		// endCursorAmount is the amount of cursors to fetch to get the random users.
+		endCursorAmount := totalCursorAmount - beginCursorAmount
+		disgo.Infof("Selecting %d random stargazers out of %d\n", (endCursorAmount-1)*contribPagination, totalUsers)
 
-	selectedCursors = pickRandomStringsExcept(cursors, selectedCursors, uint(endCursorAmount))
+		selectedCursors = pickRandomStringsExcept(cursors, selectedCursors, uint(endCursorAmount))
+	}
 
 	return selectedCursors
 }

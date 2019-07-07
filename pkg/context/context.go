@@ -1,6 +1,6 @@
 package context
 
-// Context represents the context of the Astronomer scan.
+// Context represents the context of an Astronomer scan.
 type Context struct {
 	RepoOwner          string
 	RepoName           string
