@@ -38,3 +38,99 @@ func TestBuildReport(t *testing.T) {
 		assert.Equal(t, expectedTrust, report.Factors[factor], "unexpected value for factor %q", factor)
 	}
 }
+
+func TestBuildReportWithPercentiles(t *testing.T) {
+	expectedFactors := map[FactorName]Factor{
+		PrivateContributionFactor:  Factor{Value: 0, TrustPercent: 0},
+		IssueContributionFactor:    Factor{Value: 0, TrustPercent: 0},
+		CommitContributionFactor:   Factor{Value: 0, TrustPercent: 0},
+		RepoContributionFactor:     Factor{Value: 0, TrustPercent: 0},
+		PRContributionFactor:       Factor{Value: 0, TrustPercent: 0},
+		PRReviewContributionFactor: Factor{Value: 0, TrustPercent: 0},
+		AccountAgeFactor:           Factor{Value: 0, TrustPercent: 0},
+		ContributionScoreFactor:    Factor{Value: 0, TrustPercent: 0},
+	}
+
+	expectedPercentiles := map[Percentile]Factor{
+		percentiles[0]:  Factor{TrustPercent: 0},
+		percentiles[1]:  Factor{TrustPercent: 0},
+		percentiles[2]:  Factor{TrustPercent: 0},
+		percentiles[3]:  Factor{TrustPercent: 0},
+		percentiles[4]:  Factor{TrustPercent: 0},
+		percentiles[5]:  Factor{TrustPercent: 0},
+		percentiles[6]:  Factor{TrustPercent: 0},
+		percentiles[7]:  Factor{TrustPercent: 0},
+		percentiles[8]:  Factor{TrustPercent: 0},
+		percentiles[9]:  Factor{TrustPercent: 0},
+		percentiles[10]: Factor{TrustPercent: 0},
+		percentiles[11]: Factor{TrustPercent: 0},
+		percentiles[12]: Factor{TrustPercent: 0},
+		percentiles[13]: Factor{TrustPercent: 0},
+		percentiles[14]: Factor{TrustPercent: 0},
+		percentiles[15]: Factor{TrustPercent: 0},
+		percentiles[16]: Factor{TrustPercent: 0},
+		percentiles[17]: Factor{TrustPercent: 0},
+		percentiles[18]: Factor{TrustPercent: 0},
+	}
+
+	trustData := map[FactorName][]float64{
+		PrivateContributionFactor:  []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		IssueContributionFactor:    []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		CommitContributionFactor:   []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		RepoContributionFactor:     []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		PRContributionFactor:       []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		PRReviewContributionFactor: []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		AccountAgeFactor:           []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		ContributionScoreFactor:    []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	}
+
+	report, err := buildReport(trustData)
+	require.NoError(t, err)
+	require.NotNil(t, report)
+
+	for factor, expectedTrust := range expectedFactors {
+		assert.Equal(t, expectedTrust, report.Factors[factor], "unexpected value for factor %q", factor)
+	}
+
+	for percentile, expectedPercentile := range expectedPercentiles {
+		assert.Equal(t, expectedPercentile, report.Percentiles[percentile], "unexpected value for percentile %q", percentile)
+	}
+}
+
+func TestSplitTrustReports(t *testing.T) {
+	trustData := make(map[FactorName][]float64)
+
+	earlyUser := float64(1)
+	randomUser := float64(2)
+
+	trustData = addToTrustData(trustData, 200, earlyUser)
+	trustData = addToTrustData(trustData, 800, randomUser)
+
+	earlyUsers, randomUsers := splitTrustData(trustData)
+	require.NotNil(t, earlyUsers)
+	require.NotNil(t, randomUsers)
+
+	for _, data := range earlyUsers {
+		assert.Len(t, data, 200)
+		for _, userValue := range data {
+			assert.Equal(t, userValue, earlyUser)
+		}
+	}
+
+	for _, data := range randomUsers {
+		assert.Len(t, data, 800)
+		for _, userValue := range data {
+			assert.Equal(t, userValue, randomUser)
+		}
+	}
+}
+
+func addToTrustData(trustData map[FactorName][]float64, amount int, value float64) map[FactorName][]float64 {
+	for i := 0; i < amount; i++ {
+		for _, factor := range factors {
+			trustData[factor] = append(trustData[factor], value)
+		}
+	}
+
+	return trustData
+}
