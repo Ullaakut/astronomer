@@ -89,14 +89,16 @@ func printHeader(info bool) {
 // FactorName:                  Score             Trust%
 func printFactor(info bool, factorName string, factor Factor) {
 	format := tabulateFormat(factorsFormat, factorName, firstColumnLength)
-	format = tabulateFormat(format, fmt.Sprintf("%1.f", factor.Value), secondColumnLength)
+	format = tabulateFormat(format, fmt.Sprintf("%1.f", factor.Value), secondColumnLength+2)
 
-	if factor.TrustPercent < 0.5 {
-		printf(info, format, factorName, style.Failure(fmt.Sprintf("%1.f", factor.Value)), style.Failure(fmt.Sprintf("%4.f%%", factor.TrustPercent*100)))
-	} else if factor.TrustPercent < 0.75 {
-		printf(info, format, factorName, style.Important(fmt.Sprintf("%1.f", factor.Value)), style.Important(fmt.Sprintf("%4.f%%", factor.TrustPercent*100)))
+	grade := percentToLetterGrade(factor.TrustPercent)
+
+	if factor.TrustPercent < 0.4 {
+		printf(info, format, factorName, style.Failure(fmt.Sprintf("%1.f", factor.Value)), style.Failure(grade))
+	} else if factor.TrustPercent < 0.6 {
+		printf(info, format, factorName, style.Important(fmt.Sprintf("%1.f", factor.Value)), style.Important(grade))
 	} else {
-		printf(info, format, factorName, style.Success(fmt.Sprintf("%1.f", factor.Value)), style.Success(fmt.Sprintf("%4.f%%", factor.TrustPercent*100)))
+		printf(info, format, factorName, style.Success(fmt.Sprintf("%1.f", factor.Value)), style.Success(grade))
 	}
 }
 
@@ -111,15 +113,17 @@ func printPercentile(info bool, percentile Percentile, factor Factor) {
 // printResult prints the overall result in the following format:
 // FactorName:                                    Trust%
 func printResult(info bool, factorName string, factor Factor) {
-	format := tabulateFormat(OverallTrustFormat, factorName, firstColumnLength+secondColumnLength+1)
+	format := tabulateFormat(OverallTrustFormat, factorName, firstColumnLength+secondColumnLength+3)
 	underline := generateUnderline(firstColumnLength + secondColumnLength + 8)
 
-	if factor.TrustPercent < 0.5 {
-		printf(info, format, underline, factorName, style.Failure(fmt.Sprintf("%4.f%%", factor.TrustPercent*100)))
-	} else if factor.TrustPercent < 0.75 {
-		printf(info, format, underline, factorName, style.Important(fmt.Sprintf("%4.f%%", factor.TrustPercent*100)))
+	grade := percentToLetterGrade(factor.TrustPercent)
+
+	if factor.TrustPercent < 0.4 {
+		printf(info, format, underline, factorName, style.Failure(grade))
+	} else if factor.TrustPercent < 0.6 {
+		printf(info, format, underline, factorName, style.Important(grade))
 	} else {
-		printf(info, format, underline, factorName, style.Success(fmt.Sprintf("%4.f%%", factor.TrustPercent*100)))
+		printf(info, format, underline, factorName, style.Success(grade))
 	}
 }
 
@@ -147,4 +151,19 @@ func generateUnderline(length int) string {
 	}
 
 	return string(underline)
+}
+
+func percentToLetterGrade(percent float64) string {
+	switch {
+	case percent > 0.8:
+		return "A"
+	case percent > 0.6:
+		return "B"
+	case percent > 0.4:
+		return "C"
+	case percent > 0.2:
+		return "D"
+	default:
+		return "E"
+	}
 }
