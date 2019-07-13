@@ -80,7 +80,7 @@ func sendReport(report SignedReport) error {
 		return fmt.Errorf("unable to send signed report to astronomer server: %v", err)
 	}
 
-	if response.StatusCode != 200 {
+	if response.StatusCode != 201 {
 		return fmt.Errorf("astronomer server did not trust this report: %v", response.Status)
 	}
 
