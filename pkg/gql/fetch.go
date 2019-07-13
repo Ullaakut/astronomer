@@ -401,7 +401,7 @@ func getCursors(ctx *context.Context, sg []stargazers, totalUsers uint) []string
 		}
 	}
 
-	if totalUsers <= 200 {
+	if totalUsers <= 219 {
 		disgo.Infof("All %d stargazers will be scanned\n", totalUsers)
 		return cursors
 	}

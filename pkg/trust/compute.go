@@ -71,7 +71,7 @@ func Compute(ctx *context.Context, users []gql.User) (*Report, error) {
 
 	defer disgo.EndStep()
 
-	if uint(len(users)) >= 200 {
+	if uint(len(users)) > 219 {
 		return buildComparativeReport(trustData)
 	}
 
@@ -80,8 +80,7 @@ func Compute(ctx *context.Context, users []gql.User) (*Report, error) {
 
 func buildReport(trustData map[FactorName][]float64) (*Report, error) {
 	report := &Report{
-		Factors:     make(map[FactorName]Factor),
-		Percentiles: make(map[Percentile]Factor),
+		Factors: make(map[FactorName]Factor),
 	}
 
 	for factor, data := range trustData {
@@ -100,6 +99,7 @@ func buildReport(trustData map[FactorName][]float64) (*Report, error) {
 	// Only compute percentiles if  there are enough stargazers to be
 	// able to compute every fifth percentile.
 	if len(trustData[ContributionScoreFactor]) > 20 {
+		report.Percentiles = make(map[Percentile]Factor)
 		for _, percentile := range percentiles {
 			// Error is ignored on purpose.
 			pctl, _ := strconv.ParseFloat(string(percentile), 64)
