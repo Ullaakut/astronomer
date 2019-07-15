@@ -17,7 +17,7 @@ func TestPrintTrustFactor(t *testing.T) {
 		TrustPercent: 0.99,
 	})
 
-	assert.Contains(t, logger.String(), "test_name:                           42              A")
+	assert.Contains(t, logger.String(), "test_name:                           42                A")
 }
 
 func TestPrintPercentile(t *testing.T) {
@@ -29,7 +29,7 @@ func TestPrintPercentile(t *testing.T) {
 		TrustPercent: 0.99,
 	})
 
-	assert.Contains(t, logger.String(), "5th percentile:                      8484            A")
+	assert.Contains(t, logger.String(), "5th percentile:                      8484              A")
 }
 
 func TestPrintResult(t *testing.T) {
@@ -41,7 +41,7 @@ func TestPrintResult(t *testing.T) {
 	})
 
 	assert.Contains(t, logger.String(), "----------------------------------------------------------")
-	assert.Contains(t, logger.String(), "test_name:                                           A")
+	assert.Contains(t, logger.String(), "test_name:                                             A")
 }
 
 func TestPrintHeader(t *testing.T) {
