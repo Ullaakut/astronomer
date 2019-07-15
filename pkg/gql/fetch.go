@@ -312,7 +312,7 @@ func FetchContributions(ctx *context.Context, cursors []string, untilYear int) (
 			}
 
 			if response == nil || err != nil {
-				return nil, fmt.Errorf("failed to fetch user contributions. failed at cursor %s", cursors[page-2])
+				return nil, fmt.Errorf("failed to fetch user contributions. failed at cursor %s", currentCursor)
 			}
 
 			// Update list of users with users from reponse.
@@ -320,7 +320,7 @@ func FetchContributions(ctx *context.Context, cursors []string, untilYear int) (
 
 			if len(response.Errors) != 0 || response.ErrorMessage != "" {
 				disgo.Errorln("Errors:", response.ErrorMessage, response.Errors)
-				return nil, fmt.Errorf("failed to fetch user contributions. failed at cursor %s", cursors[page-2])
+				return nil, fmt.Errorf("failed to fetch user contributions. failed at cursor %s", currentCursor)
 			}
 
 			// If file was fetched, write it in the cache. If we already got it from the cache,
