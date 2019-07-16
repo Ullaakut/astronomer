@@ -63,6 +63,40 @@ Then, use the astronomer docker image like such: `docker run -t -e GITHUB_TOKEN=
 
 You can also download pre-compiled go binaries from the [Astronomer releases](https://github.com/Ullaakut/astronomer/releases/latest).
 
+For the following commands, if you don't have a `$GOPATH`, feel free to replace the path of destination with what works best for you. (For example, `/usr/local/bin`)
+
+There are no dependencies, since astronomer comes as a statically built binary.
+
+#### Linux
+
+> AMD64
+
+```bash
+curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/releases/download/v1.1.2/astronomer-linux-amd64
+```
+
+> ARM
+
+```bash
+curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/releases/download/v1.1.2/astronomer-linux-arm
+```
+
+> 386
+
+```bash
+curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/releases/download/v1.1.2/astronomer-linux-386
+```
+
+#### MacOS
+
+```bash
+curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/releases/download/v1.1.2/astronomer-darwin-amd64
+```
+
+#### Windows
+
+Download [this file](https://github.com/Ullaakut/astronomer/releases/download/v1.1.2/astronomer-windows-386.exe), rename it to `astronomer` and add it to your path.
+
 ## Arguments and options
 
 * It is required to specify a repository in the form `repositoryOwner/repositoryName`. This argument's position does not matter.
