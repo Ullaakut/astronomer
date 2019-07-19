@@ -51,9 +51,11 @@ In order to use Astronomer, you'll need a GitHub token with `repo` read rights. 
 
 ### Docker image
 
-Run `docker pull ullaakut/astronomer`.
+Run the astronomer docker image like such:
 
-Then, use the astronomer docker image like such: `docker run -t -e GITHUB_TOKEN=$GITHUB_TOKEN -v "/path/to/your/cache/folder:/data/" ullaakut/astronomer repositoryOwner/repositoryName`
+~~~bash
+docker run --rm -t -e GITHUB_TOKEN=$TOKEN -v "/path/to/cache:/data" ullaakut/astronomer repositoryOwner/repositoryName
+~~~
 
 * The `-t` flag allows you to get a colored output. You can remove it from the command line if you don't care about this.
 * The `-e GITHUB_TOKEN=<your_token>` option is mandatory. The GitHub API won't authorize any requests without it.
