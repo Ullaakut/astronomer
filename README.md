@@ -95,6 +95,12 @@ curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/rele
 curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/releases/download/v1.1.2/astronomer-darwin-amd64
 ```
 
+**or**
+
+```bash
+brew tap dkanejs/homebrew-astronomer && brew install astronomer
+```
+
 #### Windows
 
 Download [this file](https://github.com/Ullaakut/astronomer/releases/download/v1.1.2/astronomer-windows-386.exe), rename it to `astronomer` and add it to your path.
