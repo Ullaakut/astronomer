@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cenk/backoff"
+	"github.com/cenkalti/backoff/v3"
 	"github.com/ullaakut/astronomer/pkg/context"
 	"github.com/ullaakut/disgo"
 	"github.com/ullaakut/disgo/style"
