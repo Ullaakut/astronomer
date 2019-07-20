@@ -175,6 +175,17 @@ If you want a very precise report of all of your stargazers, use the `--all` opt
 
 <br/>
 
+> I get the following error: `✖ failed to query stargazer data: failed to fetch user contributions. failed at cursor Y3Vyc29yOnYyOpIAzgNQI9s=`, what can I do?
+
+This is due to the GitHub API timing out for some users with massive amounts of contributions. That's why there is a blacklist system in Astronomer. Most likely, running the scan again will work next time (if the user was within the randon stargazers and not the first 200). If the problem persists, please send me the following information:
+
+* The cursor that is given to you in the error (in the case of the example above, `Y3Vyc29yOnYyOpIAzgNQI9s=`)
+* The repository owner and name that you were scanning (for example, `ullaakut/astronomer`)
+
+And I will manually figure out what user is responsible for the issue, add him to the blacklist and send a ticket to GitHub to fix their profile. They did it in the past, so if we respect this process, we can even help GitHub 👍
+
+<br/>
+
 > _How can I contribute to this project?_
 
 Simply running Astronomer on as many GitHub projects as possible (especially those with over 1000 stars) is very helpful for us, as it gives us more data in order to refine the algorithm.
