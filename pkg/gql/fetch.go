@@ -190,7 +190,8 @@ func FetchContributions(ctx *context.Context, cursors []string, untilYear int) (
 	requestBody := buildRequestBody(ctx, fetchContributionsRequest, contribPagination)
 	client := &http.Client{}
 
-	progressBar := setupProgressBar(len(cursors) + 2)
+	progress, bar := setupProgressBar(len(cursors) + 2)
+	defer progress.Wait()
 
 	// If we are scanning only a portion of stargazers, the
 	// scan does not start with a page without a cursor.
@@ -208,13 +209,6 @@ func FetchContributions(ctx *context.Context, cursors []string, untilYear int) (
 	// Iterate on pages of user contributions, following the cursors generated
 	// in fetchStargazers.
 	for page := 1; page <= totalPages; page++ {
-		// HACK: The progress bar completely messes up the
-		// reports unless we clear it and wait before printing
-		// anything else. Need to figure out why.
-		if page == totalPages-1 {
-			progressBar.Abort(true)
-			time.Sleep(50 * time.Millisecond)
-		}
 
 		currentCursor := getCursor(cursors, page, isReverseOrder)
 
@@ -232,9 +226,6 @@ func FetchContributions(ctx *context.Context, cursors []string, untilYear int) (
 		// Get all user contributions for each year.
 		currentYear := time.Now().Year()
 		for i := 0; currentYear-i > untilYear-1; i++ {
-
-			// Store start time in order to compute ETA for the progress bar.
-			startTime := time.Now()
 
 			// Inject the dates corresponding to the year we're scanning, into the request body.
 			from := time.Date(currentYear-i, time.January, 1, 0, 0, 0, 0, time.UTC)
@@ -339,7 +330,7 @@ func FetchContributions(ctx *context.Context, cursors []string, untilYear int) (
 			}
 
 			// Update progress bar.
-			progressBar.IncrBy(contribPagination/(currentYear-untilYear), time.Since(startTime))
+			bar.IncrBy(contribPagination / (currentYear - untilYear))
 		}
 	}
 
@@ -475,11 +466,11 @@ func isBlacklisted(user string) bool {
 
 // setupProgressBar sets the progress bar properly according to
 // the expected amount of pages of data.
-func setupProgressBar(pages int) *mpb.Bar {
+func setupProgressBar(pages int) (*mpb.Progress, *mpb.Bar) {
 	p := mpb.New(mpb.WithWidth(64))
 
 	bar := p.AddBar(int64(pages*contribPagination),
-		mpb.BarStyle("[=>-]"),
+		mpb.BarRemoveOnComplete(),
 		mpb.AppendDecorators(
 			decor.Name("ETA: "),
 			decor.AverageETA(decor.ET_STYLE_GO),
@@ -489,7 +480,7 @@ func setupProgressBar(pages int) *mpb.Bar {
 			decor.Percentage()),
 	)
 
-	return bar
+	return p, bar
 }
 
 // getCursor returns the current cursor for the given page, depending on the
