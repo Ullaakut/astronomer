@@ -190,7 +190,7 @@ func FetchContributions(ctx *context.Context, cursors []string, untilYear int) (
 	requestBody := buildRequestBody(ctx, fetchContributionsRequest, contribPagination)
 	client := &http.Client{}
 
-	progress, bar := setupProgressBar(len(cursors) + 2)
+	progress, bar := setupProgressBar(len(cursors) + 1)
 	defer progress.Wait()
 
 	// If we are scanning only a portion of stargazers, the
@@ -226,7 +226,6 @@ func FetchContributions(ctx *context.Context, cursors []string, untilYear int) (
 		// Get all user contributions for each year.
 		currentYear := time.Now().Year()
 		for i := 0; currentYear-i > untilYear-1; i++ {
-
 			// Inject the dates corresponding to the year we're scanning, into the request body.
 			from := time.Date(currentYear-i, time.January, 1, 0, 0, 0, 0, time.UTC)
 			to := from.Add(year - 1*time.Second)
