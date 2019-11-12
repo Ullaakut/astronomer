@@ -1,6 +1,8 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
+github.com/Ullaakut/disgo v0.3.1 h1:BGGVHynji41KGuGI02ztTCnILRvyzlvmiCRl5bBpjKk=
+github.com/Ullaakut/disgo v0.3.1/go.mod h1:/CSvpnYVSKOeh2dvUvx9cXshzz2t7T1/lRO/MrFj3fI=
 github.com/VividCortex/ewma v1.1.1 h1:MnEK4VOv6n0RSY4vtRe3h11qjxL3+t0B8yOL8iMXdcM=
 github.com/VividCortex/ewma v1.1.1/go.mod h1:2Tkkvm3sRDVXaiyucHiACn4cqf7DpdyLvmxzcbUokwA=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
@@ -117,6 +119,8 @@ github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
 github.com/ullaakut/disgo v0.3.0 h1:2zrEyNBfPRgDVDgzM/qLXZ4Yqt3Lxz7ERvZUSmqSY2M=
 github.com/ullaakut/disgo v0.3.0/go.mod h1:UOgLVyqihzJ7yihrHjYZikivT+AHb9NhT3r1OyPCJqg=
+github.com/ullaakut/disgo v0.3.1 h1:XfglQQLm7puB7LnmMuyd3IeMOFT5n3YT+1d36J31eJk=
+github.com/ullaakut/disgo v0.3.1/go.mod h1:UOgLVyqihzJ7yihrHjYZikivT+AHb9NhT3r1OyPCJqg=
 github.com/vbauerster/mpb/v4 v4.8.4 h1:KaZ/bVd3m7p2qy1R487T53rouanep/AWjnaU7fv/c4k=
 github.com/vbauerster/mpb/v4 v4.8.4/go.mod h1:MxQf3eHZgvVuUmfdEO8DId0YhjNqqFQBEwrzZa06BH4=
 github.com/vbauerster/mpb/v4 v4.9.1 h1:MJ8bzewKBxC4fgaxIhqCFrBT6o8CAZFpyYX+b4kfNiQ=
