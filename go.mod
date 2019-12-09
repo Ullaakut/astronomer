@@ -9,7 +9,7 @@ require (
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/montanaflynn/stats v0.5.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.5.0
+	github.com/spf13/viper v1.6.1
 	github.com/stretchr/testify v1.4.0
 	github.com/ullaakut/disgo v0.3.1
 	github.com/vbauerster/mpb/v4 v4.11.1
