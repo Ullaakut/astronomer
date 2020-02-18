@@ -7,7 +7,7 @@ require (
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/mattn/go-colorable v0.1.2 // indirect
-	github.com/montanaflynn/stats v0.5.0
+	github.com/montanaflynn/stats v0.6.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.6.2
 	github.com/stretchr/testify v1.4.0
