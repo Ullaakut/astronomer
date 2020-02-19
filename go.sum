@@ -155,8 +155,8 @@ github.com/vbauerster/mpb/v4 v4.11.1 h1:ZOYQSVHgmeanXsbyC44aDg76tBGCS/54Rk8VkL8d
 github.com/vbauerster/mpb/v4 v4.11.1/go.mod h1:vMLa1J/ZKC83G2lB/52XpqT+ZZtFG4aZOdKhmpRL1uM=
 github.com/vbauerster/mpb/v4 v4.11.2 h1:ynkUoKzi65DZ1UsQPx7sgi/KN6G9f7br+Us2nKm35AM=
 github.com/vbauerster/mpb/v4 v4.11.2/go.mod h1:jIuIRCltGJUnm6DCyPVkwjlLUk4nHTH+m4eD14CdFF0=
-github.com/vbauerster/mpb/v4 v4.12.0 h1:ZGnGYq1dY44ZZL0qn4EsrIGoEe86KFrqqHJomNQVwrA=
-github.com/vbauerster/mpb/v4 v4.12.0/go.mod h1:LVRGvMch8T4HQO3eg2pFPsACH9kO/O6fT/7vhGje3QE=
+github.com/vbauerster/mpb/v4 v4.12.1 h1:THVHPgASDu9QnRkZaWaZyTgPotyHn9q9j2Mut6tliAw=
+github.com/vbauerster/mpb/v4 v4.12.1/go.mod h1:LVRGvMch8T4HQO3eg2pFPsACH9kO/O6fT/7vhGje3QE=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
