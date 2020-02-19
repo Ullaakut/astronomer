@@ -12,6 +12,6 @@ require (
 	github.com/spf13/viper v1.6.2
 	github.com/stretchr/testify v1.4.0
 	github.com/ullaakut/disgo v0.3.1
-	github.com/vbauerster/mpb/v4 v4.11.2
+	github.com/vbauerster/mpb/v4 v4.12.0
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 )
