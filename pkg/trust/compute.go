@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/montanaflynn/stats"
 	"github.com/Ullaakut/astronomer/pkg/context"
 	"github.com/Ullaakut/astronomer/pkg/gql"
 	"github.com/Ullaakut/disgo"
 	"github.com/Ullaakut/disgo/style"
+	"github.com/montanaflynn/stats"
 )
 
 // Factor represents one of the trust factors used to compte
@@ -181,6 +181,12 @@ func buildComparativeReport(trustData map[FactorName][]float64) (*Report, error)
 	}
 
 	for _, percentile := range percentiles {
+		// Skip percentiles if the random sample is too small to have percentiles.
+		if currentStarsReport.Percentiles[percentile].TrustPercent == 0 {
+			report.Percentiles = nil
+			break
+		}
+
 		if firstStarsReport.Percentiles[percentile].TrustPercent <= currentStarsReport.Percentiles[percentile].TrustPercent {
 			report.Percentiles[percentile] = firstStarsReport.Percentiles[percentile]
 		} else {
@@ -196,6 +202,10 @@ func buildComparativeReport(trustData map[FactorName][]float64) (*Report, error)
 	}
 
 	for _, percentile := range percentiles {
+		// Skip percentiles if the random sample is too small to have percentiles.
+		if report.Percentiles[percentile].TrustPercent == 0 {
+			break
+		}
 		allTrust = append(allTrust, report.Percentiles[percentile].TrustPercent)
 	}
 
