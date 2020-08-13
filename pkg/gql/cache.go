@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/kennygrant/sanitize"
-	"github.com/ullaakut/astronomer/pkg/context"
+	"github.com/Ullaakut/astronomer/pkg/context"
 )
 
 // getCache searches the cache directory for a file matching the

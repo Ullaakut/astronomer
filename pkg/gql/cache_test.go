@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ullaakut/astronomer/pkg/context"
+	"github.com/Ullaakut/astronomer/pkg/context"
 )
 
 func TestCacheEntryFilename(t *testing.T) {

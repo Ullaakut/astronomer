@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/montanaflynn/stats"
-	"github.com/ullaakut/astronomer/pkg/context"
-	"github.com/ullaakut/astronomer/pkg/gql"
-	"github.com/ullaakut/disgo"
-	"github.com/ullaakut/disgo/style"
+	"github.com/Ullaakut/astronomer/pkg/context"
+	"github.com/Ullaakut/astronomer/pkg/gql"
+	"github.com/Ullaakut/disgo"
+	"github.com/Ullaakut/disgo/style"
 )
 
 // Factor represents one of the trust factors used to compte
