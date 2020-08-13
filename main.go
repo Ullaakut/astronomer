@@ -95,7 +95,7 @@ func detectFakeStars(ctx *context.Context) error {
 		disgo.Infoln(style.Important("This repository appears to have a low amount of stargazers. Trust calculations might not be accurate."))
 	}
 
-	// For now, we only fetch contributions until 2013. It will be configurable later on
+	// For now, we only fetch contributions since 2013. It will be configurable later on
 	// once the algorithm is more accurate and more data has been fetched.
 	if !ctx.ScanAll && totalUsers > ctx.Stars {
 		disgo.Infof("Fetching contributions for %d users up to year %d\n", ctx.Stars, 2013)

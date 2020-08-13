@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cenkalti/backoff/v3"
 	"github.com/Ullaakut/astronomer/pkg/context"
 	"github.com/Ullaakut/disgo"
 	"github.com/Ullaakut/disgo/style"
+	"github.com/cenkalti/backoff/v3"
 	"github.com/vbauerster/mpb/v4"
 	"github.com/vbauerster/mpb/v4/decor"
 )
@@ -190,7 +190,7 @@ func FetchContributions(ctx *context.Context, cursors []string, untilYear int) (
 	requestBody := buildRequestBody(ctx, fetchContributionsRequest, contribPagination)
 	client := &http.Client{}
 
-	progress, bar := setupProgressBar(len(cursors) + 1)
+	progress, bar := setupProgressBar(len(cursors))
 	defer progress.Wait()
 
 	// If we are scanning only a portion of stargazers, the
@@ -209,7 +209,6 @@ func FetchContributions(ctx *context.Context, cursors []string, untilYear int) (
 	// Iterate on pages of user contributions, following the cursors generated
 	// in fetchStargazers.
 	for page := 1; page <= totalPages; page++ {
-
 		currentCursor := getCursor(cursors, page, isReverseOrder)
 
 		// If this isn't the first page, inject the cursor value.
@@ -332,6 +331,8 @@ func FetchContributions(ctx *context.Context, cursors []string, untilYear int) (
 			bar.IncrBy(contribPagination / (currentYear - untilYear))
 		}
 	}
+
+	bar.Abort(true)
 
 	return users, nil
 }
