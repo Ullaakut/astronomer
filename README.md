@@ -74,25 +74,25 @@ There are no dependencies, since astronomer comes as a statically built binary.
 > AMD64
 
 ```bash
-curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/releases/download/v1.1.2/astronomer-linux-amd64
+curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/releases/download/v1.1.3/astronomer-linux-amd64
 ```
 
 > ARM
 
 ```bash
-curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/releases/download/v1.1.2/astronomer-linux-arm
+curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/releases/download/v1.1.3/astronomer-linux-arm
 ```
 
 > 386
 
 ```bash
-curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/releases/download/v1.1.2/astronomer-linux-386
+curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/releases/download/v1.1.3/astronomer-linux-386
 ```
 
 #### MacOS
 
 ```bash
-curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/releases/download/v1.1.2/astronomer-darwin-amd64
+curl -o $GOPATH/bin/astronomer -sSLO https://github.com/Ullaakut/astronomer/releases/download/v1.1.3/astronomer-darwin-amd64
 ```
 
 **or**
@@ -103,7 +103,7 @@ brew tap dkanejs/homebrew-astronomer && brew install astronomer
 
 #### Windows
 
-Download [this file](https://github.com/Ullaakut/astronomer/releases/download/v1.1.2/astronomer-windows-386.exe), rename it to `astronomer` and add it to your path.
+Download [this file](https://github.com/Ullaakut/astronomer/releases/download/v1.1.3/astronomer-windows-386.exe), rename it to `astronomer` and add it to your path.
 
 ## Arguments and options
 
