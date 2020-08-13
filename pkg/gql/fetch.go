@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v3"
-	"github.com/ullaakut/astronomer/pkg/context"
-	"github.com/ullaakut/disgo"
-	"github.com/ullaakut/disgo/style"
+	"github.com/Ullaakut/astronomer/pkg/context"
+	"github.com/Ullaakut/disgo"
+	"github.com/Ullaakut/disgo/style"
 	"github.com/vbauerster/mpb/v4"
 	"github.com/vbauerster/mpb/v4/decor"
 )

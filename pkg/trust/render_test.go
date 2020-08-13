@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ullaakut/disgo"
+	"github.com/Ullaakut/disgo"
 )
 
 func TestPrintTrustFactor(t *testing.T) {

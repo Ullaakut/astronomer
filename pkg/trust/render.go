@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ullaakut/disgo"
-	"github.com/ullaakut/disgo/style"
+	"github.com/Ullaakut/disgo"
+	"github.com/Ullaakut/disgo/style"
 )
 
 const (

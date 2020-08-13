@@ -3,7 +3,7 @@ package gql
 import (
 	"time"
 
-	"github.com/ullaakut/disgo"
+	"github.com/Ullaakut/disgo"
 )
 
 const (
