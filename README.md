@@ -153,7 +153,7 @@ Repositories with high amounts of stars, especially when they arrive in bursts, 
 
 > _How accurate is this algorithm? Why does my repository have a low trust level?_
 
-Astronomer only attempts to estimate a trust level. A low score could be indicative of a community of casual GitHub users, or a repisitory with a low amount of stars resulting in low precisions.
+Astronomer only attempts to estimate a trust level. A low score could be indicative of a community of casual GitHub users, or a repository with a low amount of stars resulting in low precisions.
 
 <br/>
 
